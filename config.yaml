@@ -35,12 +35,12 @@ datasets:
     text_col: "transcription"
     split: "train+validation"
 
-  - name: "Amharic_Speech_Badrex" # Placeholder for ALFFA/EthioSpeech if not directly on HF
+  - name: "Amharic_Speech_Badrex"
     language: "amharic"
     hf_path: "badrex/amharic-speech"
     type: "voice"
     voice_col: "audio"
-    text_col: "text" # Verify column name
+    text_col: "text"
     split: "train"
 
   - name: "Fleurs_Somali"
@@ -57,12 +57,28 @@ datasets:
     hf_path: "skydheere/soomali-asr-dataset"
     type: "voice"
     voice_col: "audio"
-    text_col: "text" # Verify column name
+    text_col: "text"
     split: "train"
 
-  # --- WEST & CENTRAL AFRICA (WAXAL Coverage: Hausa, Yoruba, Lingala, Wolof) ---
-  # Note: Check specific subset names for google/WaxalNLP (e.g., 'ha', 'yo', 'ln', 'wo')
-  
+  # --- EAST AFRICA (Swahili) ---
+  - name: "WAXAL_Swahili"
+    language: "swahili"
+    hf_path: "google/WaxalNLP"
+    subset: "swa_tts"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  - name: "Swahili_Parallel"
+    language: "swahili"
+    hf_path: "michsethowusu/swahili-words-speech-text-parallel"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  # --- WEST & CENTRAL AFRICA (Hausa, Yoruba, Lingala, Wolof) ---
   - name: "Nigerian_CommonVoice_Hausa"
     language: "hausa"
     hf_path: "benjaminogbonna/nigerian_common_voice_dataset"
@@ -75,38 +91,53 @@ datasets:
   - name: "WAXAL_Hausa"
     language: "hausa"
     hf_path: "google/WaxalNLP"
-    subset: "hau_tts" # Using TTS subset as ASR subset is not listed
+    subset: "hau_tts"
     type: "voice"
     voice_col: "audio" 
-    text_col: "text" # Verify column name
+    text_col: "text"
     split: "train"
 
-  # - name: "Hausa_ASR_NCAIR" # GATED DATASET: Requires manual acceptance on HF website
-  #   language: "hausa"
-  #   hf_path: "NCAIR1/Hausa-ASR"
-  #   type: "voice"
-  #   voice_col: "audio"
-  #   text_col: "transcription"
-  #   split: "train"
-
-  - name: "WAXAL_Yoruba"
-    language: "yoruba"
-    hf_path: "google/WaxalNLP"
-    subset: "yor_tts" # Using TTS subset
+  - name: "Hausa_TTS_Embed"
+    language: "hausa"
+    hf_path: "Aybee5/HausaTTSEmbed"
     type: "voice"
     voice_col: "audio"
     text_col: "text"
     split: "train"
 
-  - name: "ALFFA_Wolof" # Switched from WAXAL to ALFFA for better availability
+  - name: "WAXAL_Yoruba"
+    language: "yoruba"
+    hf_path: "google/WaxalNLP"
+    subset: "yor_tts"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  - name: "Yoruba_Parallel"
+    language: "yoruba"
+    hf_path: "michsethowusu/yoruba-speech-text-parallel"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  - name: "ALFFA_Wolof"
     language: "wolof"
     hf_path: "Isma/alffa_wolof"
-    # subset: "wo" 
     type: "voice"
     voice_col: "audio"
     text_col: "sentence"
     split: "train"
-    
+
+  - name: "Wolof_TTS"
+    language: "wolof"
+    hf_path: "galsenai/wolof_tts"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
   - name: "WAXAL_Lingala"
     language: "lingala"
     hf_path: "google/WaxalNLP"
@@ -120,10 +151,10 @@ datasets:
   - name: "Swivuriso_Zulu"
     language: "zulu"
     hf_path: "dsfsi-anv/za-african-next-voices"
-    subset: "zul" # Check subset for Zulu
+    subset: "zul" 
     type: "voice"
     voice_col: "audio"
-    text_col: "transcription" # Verify
+    text_col: "transcription"
     split: "train"
 
   # --- NORTH AFRICA (Egyptian Arabic) ---
@@ -132,5 +163,5 @@ datasets:
     hf_path: "MightyStudent/Egyptian-ASR-MGB-3"
     type: "voice"
     voice_col: "audio"
-    text_col: "transcription" # Verify
+    text_col: "transcription"
     split: "train"
