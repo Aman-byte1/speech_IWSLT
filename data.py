@@ -228,11 +228,15 @@ class DataPipeline:
 
         # 3. Map Function (Text Cleaning & Optional Semantic Filter Prep)
         def map_fn(example):
-            # Text normalization
+            # Standardize Text Column
             text_col = ds_conf.get('text_col')
             if text_col and text_col in example:
-                example[text_col] = self.text_proc.basic_clean(example[text_col])
+                example['text'] = self.text_proc.basic_clean(example[text_col])
+                # Remove original if different (optional, but cleaner)
+                if text_col != 'text':
+                    del example[text_col]
             
+            # Standardize Audio Column
             # Load Audio into array (simulating HF Audio feature)
             if ds_conf['type'] == 'voice':
                  voice_col = ds_conf.get('voice_col')
@@ -243,16 +247,18 @@ class DataPipeline:
                     
                     if y is not None:
                         # Update example with decoded data
-                        # Note: We replace the dict/path with the array to match expected output format
-                        # or keep a structure. Let's stick to HF style dict: {'array': ..., 'sampling_rate': ...}
-                        example[voice_col] = {
+                        # Standardize to 'audio' column
+                        example['audio'] = {
                             'array': y,
                             'sampling_rate': s
                         }
+                        # Remove original if different
+                        if voice_col != 'audio':
+                            del example[voice_col]
                     
             return example
 
-        logger.info("Applying text normalization...")
+        logger.info("Applying text normalization and standardizing columns...")
         dataset_processed = dataset_filtered.map(map_fn)
         
         # 4. Semantic Filtering (If applicable)
@@ -276,13 +282,77 @@ class DataPipeline:
         logger.info(f"Saving to {local_path}")
         dataset_processed.save_to_disk(local_path)
         
-        if self.output_org and self.hf_token:
-            repo_id = f"{self.output_org}/{ds_conf.get('language', 'multi')}-{output_name}"
-            logger.info(f"Uploading to Hub: {repo_id}")
-            try:
-                dataset_processed.push_to_hub(repo_id, token=self.hf_token)
-            except Exception as e:
-                logger.error(f"Upload failed: {e}")
+        # We assume the user wants the MERGED dataset pushed, not individual ones.
+        # But per original design, we pushed individually.
+        # Now we will skip individual push if we plan to merge all later.
+        # OR we can keep it. The user said "merge it and then push it".
+        # Let's keep individual push optional or skip it. 
+        # For now, I'll comment out individual push to focus on the merged push.
+        # if self.output_org and self.hf_token:
+        #     repo_id = f"{self.output_org}/{ds_conf.get('language', 'multi')}-{output_name}"
+        #     logger.info(f"Uploading to Hub: {repo_id}")
+        #     try:
+        #         dataset_processed.push_to_hub(repo_id, token=self.hf_token)
+        #     except Exception as e:
+        #         logger.error(f"Upload failed: {e}")
+
+    def merge_and_push(self):
+        """Merges all processed datasets found in ./processed_data and pushes to HF."""
+        logger.info("\n=== MERGING DATASETS ===")
+        processed_datasets = []
+        
+        # Walk through processed_data directory
+        root_dir = "./processed_data"
+        if not os.path.exists(root_dir):
+            logger.warning("No processed data found to merge.")
+            return
+
+        from datasets import load_from_disk, concatenate_datasets
+        
+        for lang_dir in os.listdir(root_dir):
+            lang_path = os.path.join(root_dir, lang_dir)
+            if not os.path.isdir(lang_path): continue
+            
+            for ds_name in os.listdir(lang_path):
+                ds_path = os.path.join(lang_path, ds_name)
+                if os.path.isdir(ds_path):
+                    try:
+                        logger.info(f"Loading processed dataset: {ds_name}...")
+                        ds = load_from_disk(ds_path)
+                        # Add metadata columns if missing
+                        if 'language' not in ds.column_names:
+                            ds = ds.add_column("language", [lang_dir] * len(ds))
+                        if 'source' not in ds.column_names:
+                            ds = ds.add_column("source", [ds_name] * len(ds))
+                            
+                        # Ensure only common columns are kept (audio, text, language, source)
+                        # to avoid schema mismatches
+                        keep_cols = ['audio', 'text', 'language', 'source']
+                        ds = ds.select_columns([c for c in keep_cols if c in ds.column_names])
+                        
+                        processed_datasets.append(ds)
+                    except Exception as e:
+                        logger.error(f"Failed to load {ds_name} for merging: {e}")
+
+        if not processed_datasets:
+            logger.warning("No datasets loaded for merging.")
+            return
+
+        logger.info(f"Concatenating {len(processed_datasets)} datasets...")
+        try:
+            merged_dataset = concatenate_datasets(processed_datasets)
+            logger.info(f"Merged Dataset Size: {len(merged_dataset)}")
+            
+            if self.output_org and self.hf_token:
+                repo_id = f"{self.output_org}/merged_speech_dataset"
+                logger.info(f"Pushing merged dataset to {repo_id}...")
+                merged_dataset.push_to_hub(repo_id, token=self.hf_token)
+                logger.info("Push successful!")
+            else:
+                logger.warning("HF Token or Output Org not set. Skipping push.")
+                
+        except Exception as e:
+            logger.error(f"Merge/Push failed: {e}")
 
     def generate_report(self):
         logger.info("\n=== FINAL REPORT ===")
@@ -304,6 +374,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--lang", help="Filter datasets by language (e.g., 'hausa', 'amharic')")
+    parser.add_argument("--merge_only", action="store_true", help="Skip processing and only merge existing processed datasets")
     args = parser.parse_args()
     
     if not os.path.exists(args.config):
@@ -311,4 +382,12 @@ if __name__ == "__main__":
         sys.exit(1)
         
     pipeline = DataPipeline(args.config)
-    pipeline.run(lang_filter=args.lang)
+    
+    if not args.merge_only:
+        pipeline.run(lang_filter=args.lang)
+    
+    # Always try to merge at the end if we ran everything, or if requested
+    # But if we ran only one language, maybe we don't want to merge yet? 
+    # User said "merge it and then push it". Let's do it.
+    # If args.lang is set, we might only have one new dataset, but we can still merge with existing ones on disk.
+    pipeline.merge_and_push()

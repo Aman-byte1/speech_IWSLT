@@ -1,8 +1,8 @@
 # Data Pipeline Configuration for Low-Resource Speech Translation
 
 # Hugging Face Settings
-hf_token: "YOUR_HF_TOKEN_HERE"  # Set your token here or via env var
-output_org: "your-org"          # Target HF organization/user
+hf_token: "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" # User provided token
+output_org: "amanuelbyte" # User provided usernameion/user
 
 # Processing Parameters
 audio:
