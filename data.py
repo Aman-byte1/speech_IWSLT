@@ -114,7 +114,7 @@ class DataPipeline:
         self.hf_token = self.config.get('hf_token')
         self.output_org = self.config.get('output_org')
 
-    def run(self, lang_filter: Optional[str] = None):
+    def run(self, lang_filter: Optional[str] = None, skip_processing: bool = False):
         datasets_config = self.config.get('datasets', [])
         
         for ds_conf in datasets_config:
@@ -124,11 +124,11 @@ class DataPipeline:
                 if ds_lang != lang_filter.lower():
                     continue
 
-            self.process_dataset(ds_conf)
+            self.process_dataset(ds_conf, skip_processing)
             
         self.generate_report()
 
-    def process_dataset(self, ds_conf):
+    def process_dataset(self, ds_conf, skip_processing: bool = False):
         # Determine Output Path
         lang_dir = ds_conf.get('language', 'unknown')
         output_name = f"{ds_conf['name']}_processed"
@@ -139,12 +139,14 @@ class DataPipeline:
             logger.info(f"Dataset {ds_conf['name']} already processed at {local_path}. Skipping.")
             return
 
-        logger.info(f"Processing Dataset: {ds_conf['name']}")
+        logger.info(f"Processing Dataset: {ds_conf['name']} (Skip Processing: {skip_processing})")
         
         # Load Dataset
         try:
             split = ds_conf.get('split', 'train')
             logger.info(f"Loading {ds_conf['hf_path']} ({ds_conf.get('subset')})...")
+            
+            # NOTE: Loading with 'audio' column usually adds Audio feature type.
             dataset = load_dataset(ds_conf['hf_path'], ds_conf.get('subset'), split=split, token=self.hf_token)
         except Exception as e:
             logger.error(f"Failed to load {ds_conf['name']}: {e}")
@@ -152,115 +154,128 @@ class DataPipeline:
 
         original_len = len(dataset)
         
-        # 1. Cast Audio - Skipped to avoid torchcodec dependency issues.
-        # We will load audio manually using librosa.
-        target_sr = self.config['audio'].get('sampling_rate', 16000)
-        
-        # Helper to load audio from path
-        def load_audio(audio_path):
-            try:
-                # Librosa loads as mono=True by default, and resamples if sr is provided
-                y, s = librosa.load(audio_path, sr=target_sr, mono=True)
-                return y, s
-            except Exception as e:
-                logger.warning(f"Error loading audio {audio_path}: {e}")
-                return None, 0
-
-        # CRITICAL FIX: Rename/Drop the original Audio Feature column to prevent 
-        # 'datasets' from trying to decode it automatically (which triggers torchcodec).
-        # We only need the path string.
-
-        # CRITICAL FIX: Rename/Drop the original Audio Feature column to prevent 
-        # 'datasets' from trying to decode it automatically (which triggers torchcodec).
-        # We only need the path string.
-        if ds_conf['type'] == 'voice':
-             voice_col = ds_conf.get('voice_col')
-             logger.info(f"Removing Audio feature branding from '{voice_col}' to bypass decoding...")
-             try:
-                 # Cast to string to force it to be treated as a path, disabling auto-decoding
-                 dataset = dataset.cast_column(voice_col, Value("string"))
-             except Exception as e:
-                 logger.warning(f"Could not cast column {voice_col} to string: {e}")
-
-        # 2. Filter Function (Includes Text Rules & Audio Duration)
-        def filter_fn(example):
-            # Text Rules
-            text_col = ds_conf.get('text_col')
-            if text_col and text_col in example:
-                clean_text = self.text_proc.basic_clean(example[text_col])
-                if not self.text_proc.filter_rules(clean_text):
-                    return False
+        if skip_processing:
+            # === RAW COPY MODE ===
+            # Just rename columns and save. No decoding.
+            logger.info("Skip Processing enabled: Renaming columns and saving raw data...")
             
-            # Audio Duration Rules
-            if ds_conf['type'] == 'voice':
-                voice_col = ds_conf.get('voice_col')
-                if voice_col and voice_col in example:
-                    # HF datasets 'audio' col is usually a dict/struct. 
-                    # If we didn't cast, it might be a path string or a dict with 'path'.
-                    val = example[voice_col]
-                    audio_path = val if isinstance(val, str) else val.get('path')
-                    
-                    if not audio_path:
-                        return False
-
-                    # Load header info only (faster than decoding full audio) if possible, 
-                    # but librosa.get_duration works well.
-                    try:
-                        duration = librosa.get_duration(path=audio_path)
-                    except:
-                        # Fallback to full load if path not supported or other issue
-                        y, sr = load_audio(audio_path)
-                        if y is None: return False
-                        duration = len(y) / sr
-                    
-                    min_dur = self.config['audio'].get('min_duration', 1.0)
-                    max_dur = self.config['audio'].get('max_duration', 20.0)
-                    
-                    if not (min_dur <= duration <= max_dur):
-                        return False
-            return True
-
-        logger.info("Applying filters (Text Rules & Audio Duration)...")
-        # Note: Filtering requires decoding audio if we access array. 
-        # This will be slow for large datasets but is necessary for duration check.
-        # Ensure we don't have extremely large datasets or use batched filter if available/faster.
-        dataset_filtered = dataset.filter(filter_fn)
-
-        # 3. Map Function (Text Cleaning & Optional Semantic Filter Prep)
-        def map_fn(example):
-            # Standardize Text Column
-            text_col = ds_conf.get('text_col')
-            if text_col and text_col in example:
-                example['text'] = self.text_proc.basic_clean(example[text_col])
-                # Remove original if different (optional, but cleaner)
-                if text_col != 'text':
-                    del example[text_col]
+            # Rename Voice Column to 'audio'
+            voice_col = ds_conf.get('voice_col')
+            if voice_col and voice_col != 'audio' and voice_col in dataset.column_names:
+                logger.info(f"Renaming {voice_col} -> audio")
+                dataset = dataset.rename_column(voice_col, 'audio')
             
-            # Standardize Audio Column
-            # Load Audio into array (simulating HF Audio feature)
+            # Rename Text Column to 'text'
+            text_col = ds_conf.get('text_col')
+            if text_col and text_col != 'text' and text_col in dataset.column_names:
+                logger.info(f"Renaming {text_col} -> text")
+                dataset = dataset.rename_column(text_col, 'text')
+                
+            # Keep only necessary columns
+            if 'audio' in dataset.column_names and 'text' in dataset.column_names:
+                dataset = dataset.select_columns(['audio', 'text'])
+
+        else:
+            # === NORMAL PROCESSING MODE ===
+            # (Contains previous logic logic, effectively removed/replaced by this block structure for clarity
+            # if we wanted to preserve it, we'd include it here. 
+            # For this edit, I will reconstruct the loop effectively.)
+            
+            # 1. Cast Audio - Skipped to avoid torchcodec dependency issues.
+            # We will load audio manually using librosa.
+            target_sr = self.config['audio'].get('sampling_rate', 16000)
+            
+            # Helper to load audio from path
+            def load_audio(audio_path):
+                try:
+                    # Librosa loads as mono=True by default, and resamples if sr is provided
+                    y, s = librosa.load(audio_path, sr=target_sr, mono=True)
+                    return y, s
+                except Exception as e:
+                    logger.warning(f"Error loading audio {audio_path}: {e}")
+                    return None, 0
+
+            # CRITICAL FIX: Rename/Drop the original Audio Feature column to prevent 
+            # 'datasets' from trying to decode it automatically (which triggers torchcodec).
             if ds_conf['type'] == 'voice':
                  voice_col = ds_conf.get('voice_col')
-                 if voice_col and voice_col in example:
-                    val = example[voice_col]
-                    audio_path = val if isinstance(val, str) else val.get('path')
-                    y, s = load_audio(audio_path)
-                    
-                    if y is not None:
-                        # Update example with decoded data
-                        # Standardize to 'audio' column
-                        example['audio'] = {
-                            'array': y,
-                            'sampling_rate': s
-                        }
-                        # Remove original if different
-                        if voice_col != 'audio':
-                            del example[voice_col]
-                    
-            return example
+                 logger.info(f"Removing Audio feature branding from '{voice_col}' to bypass decoding...")
+                 try:
+                     # Cast to string to force it to be treated as a path, disabling auto-decoding
+                     dataset = dataset.cast_column(voice_col, Value("string"))
+                 except Exception as e:
+                     logger.warning(f"Could not cast column {voice_col} to string: {e}")
 
-        logger.info("Applying text normalization and standardizing columns...")
-        dataset_processed = dataset_filtered.map(map_fn)
-        
+            # 2. Filter Function (Includes Text Rules & Audio Duration)
+            def filter_fn(example):
+                # Text Rules
+                text_col = ds_conf.get('text_col')
+                if text_col and text_col in example:
+                    clean_text = self.text_proc.basic_clean(example[text_col])
+                    if not self.text_proc.filter_rules(clean_text):
+                        return False
+                
+                # Audio Duration Rules
+                if ds_conf['type'] == 'voice':
+                    voice_col = ds_conf.get('voice_col')
+                    if voice_col and voice_col in example:
+                        val = example[voice_col]
+                        audio_path = val if isinstance(val, str) else val.get('path')
+                        if not audio_path: return False
+
+                        try:
+                            duration = librosa.get_duration(path=audio_path)
+                        except:
+                            y, sr = load_audio(audio_path)
+                            if y is None: return False
+                            duration = len(y) / sr
+                        
+                        min_dur = self.config['audio'].get('min_duration', 1.0)
+                        max_dur = self.config['audio'].get('max_duration', 20.0)
+                        
+                        if not (min_dur <= duration <= max_dur):
+                            return False
+                return True
+
+            logger.info("Applying filters (Text Rules & Audio Duration)...")
+            dataset_filtered = dataset.filter(filter_fn)
+
+            # 3. Map Function (Text Cleaning & Optional Semantic Filter Prep)
+            def map_fn(example):
+                # Standardize Text Column
+                text_col = ds_conf.get('text_col')
+                if text_col and text_col in example:
+                    example['text'] = self.text_proc.basic_clean(example[text_col])
+                    # Remove original if different (optional, but cleaner)
+                    if text_col != 'text':
+                        del example[text_col]
+                
+                # Standardize Audio Column
+                # Load Audio into array (simulating HF Audio feature)
+                if ds_conf['type'] == 'voice':
+                     voice_col = ds_conf.get('voice_col')
+                     if voice_col and voice_col in example:
+                        val = example[voice_col]
+                        audio_path = val if isinstance(val, str) else val.get('path')
+                        y, s = load_audio(audio_path)
+                        
+                        if y is not None:
+                            # Update example with decoded data
+                            # Standardize to 'audio' column
+                            example['audio'] = {
+                                'array': y,
+                                'sampling_rate': s
+                            }
+                            # Remove original if different
+                            if voice_col != 'audio':
+                                del example[voice_col]
+                        
+                return example
+
+            logger.info("Applying text normalization and standardizing columns...")
+            dataset_processed = dataset_filtered.map(map_fn)
+            dataset = dataset_processed # update ref
+
         # 4. Semantic Filtering (If applicable)
         # Assuming we have pairs. If unrelated audio/text, skip.
         # If we have a translation target column (e.g. source_lang, target_lang columns), we can run it.
@@ -269,7 +284,7 @@ class DataPipeline:
         # We will check if 'target_text_col' is defined in config or if we want to run it on (text_col, target_col).
         # For now, simplistic implementation: skip unless we explicitly configured parallel text cols.
         
-        final_len = len(dataset_processed)
+        final_len = len(dataset) # Update to use whatever dataset we ended up with
         
         self.stats.append(ProcessStats(
             dataset_name=ds_conf['name'],
@@ -370,11 +385,21 @@ class DataPipeline:
         print(df.to_markdown(index=False))
         df.to_csv("report.csv", index=False)
 
+    args = parser.parse_args()
+    
+    pipeline = DataPipeline(args.config)
+    
+    if not args.merge_only:
+        pipeline.run(lang_filter=args.lang, skip_processing=args.skip_processing)
+    
+    pipeline.merge_and_push()
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--lang", help="Filter datasets by language (e.g., 'hausa', 'amharic')")
     parser.add_argument("--merge_only", action="store_true", help="Skip processing and only merge existing processed datasets")
+    parser.add_argument("--skip_processing", action="store_true", help="Duplicate datasets without filtering/resampling (fixes torchcodec issues)")
     args = parser.parse_args()
     
     if not os.path.exists(args.config):
@@ -384,10 +409,6 @@ if __name__ == "__main__":
     pipeline = DataPipeline(args.config)
     
     if not args.merge_only:
-        pipeline.run(lang_filter=args.lang)
+        pipeline.run(lang_filter=args.lang, skip_processing=args.skip_processing)
     
-    # Always try to merge at the end if we ran everything, or if requested
-    # But if we ran only one language, maybe we don't want to merge yet? 
-    # User said "merge it and then push it". Let's do it.
-    # If args.lang is set, we might only have one new dataset, but we can still merge with existing ones on disk.
     pipeline.merge_and_push()
