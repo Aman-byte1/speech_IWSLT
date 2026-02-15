@@ -313,14 +313,13 @@ class DataPipeline:
         #     repo_id = f"{self.output_org}/{ds_conf.get('language', 'multi')}-{output_name}"
         #     logger.info(f"Uploading to Hub: {repo_id}")
         #     try:
-        #         dataset_processed.push_to_hub(repo_id, token=self.hf_token)
-        #     except Exception as e:
-        #         logger.error(f"Upload failed: {e}")
+            #         dataset_processed.push_to_hub(repo_id, token=self.hf_token)
+            #     except Exception as e:
+            #         logger.error(f"Upload failed: {e}")
 
     def merge_and_push(self):
-        """Merges all processed datasets found in ./processed_data and pushes to HF."""
-        logger.info("\n=== MERGING DATASETS ===")
-        processed_datasets = []
+        """Merges processed datasets by language and pushes to HF as separate configs."""
+        logger.info("\n=== MERGING AND PUSHING BY LANGUAGE ===")
         
         # Walk through processed_data directory
         root_dir = "./processed_data"
@@ -328,58 +327,56 @@ class DataPipeline:
             logger.warning("No processed data found to merge.")
             return
 
-        from datasets import load_from_disk, concatenate_datasets
+        from datasets import load_from_disk, concatenate_datasets, Audio
         
+        # Iterate over each language folder
         for lang_dir in os.listdir(root_dir):
             lang_path = os.path.join(root_dir, lang_dir)
             if not os.path.isdir(lang_path): continue
+            
+            logger.info(f"\nProcessing Language: {lang_dir}")
+            lang_datasets = []
             
             for ds_name in os.listdir(lang_path):
                 ds_path = os.path.join(lang_path, ds_name)
                 if os.path.isdir(ds_path):
                     try:
-                        logger.info(f"Loading processed dataset: {ds_name}...")
+                        logger.info(f"  Loading {ds_name}...")
                         ds = load_from_disk(ds_path)
-                        # Add metadata columns if missing
-                        if 'language' not in ds.column_names:
-                            ds = ds.add_column("language", [lang_dir] * len(ds))
+                        
+                        # Add metadata
                         if 'source' not in ds.column_names:
                             ds = ds.add_column("source", [ds_name] * len(ds))
                             
-                        # Ensure only common columns are kept (audio, text, language, source)
-                        # to avoid schema mismatches
-                        keep_cols = ['audio', 'text', 'language', 'source']
+                        # Keep common columns
+                        keep_cols = ['audio', 'text', 'source']
                         ds = ds.select_columns([c for c in keep_cols if c in ds.column_names])
                         
-                        # CRITICAL FIX: Standardize 'audio' feature to avoid merge conflicts
-                        # (e.g., Audio(sr=None) vs Audio(sr=16000))
+                        # Standardize Audio
                         if 'audio' in ds.column_names:
-                            from datasets import Audio
                             ds = ds.cast_column('audio', Audio(sampling_rate=16000))
 
-                        processed_datasets.append(ds)
+                        lang_datasets.append(ds)
                     except Exception as e:
-                        logger.error(f"Failed to load {ds_name} for merging: {e}")
+                        logger.error(f"  Failed to load {ds_name}: {e}")
 
-        if not processed_datasets:
-            logger.warning("No datasets loaded for merging.")
-            return
-
-        logger.info(f"Concatenating {len(processed_datasets)} datasets...")
-        try:
-            merged_dataset = concatenate_datasets(processed_datasets)
-            logger.info(f"Merged Dataset Size: {len(merged_dataset)}")
-            
-            if self.output_org and self.hf_token:
-                repo_id = f"{self.output_org}/merged_speech_dataset"
-                logger.info(f"Pushing merged dataset to {repo_id}...")
-                merged_dataset.push_to_hub(repo_id, token=self.hf_token)
-                logger.info("Push successful!")
+            if lang_datasets:
+                try:
+                    merged_lang_ds = concatenate_datasets(lang_datasets)
+                    logger.info(f"  Merged {lang_dir}: {len(merged_lang_ds)} examples")
+                    
+                    if self.output_org and self.hf_token:
+                        repo_id = f"{self.output_org}/merged_speech_dataset"
+                        logger.info(f"  Pushing to {repo_id} (config: {lang_dir})...")
+                        # Push with config_name = language code (e.g., 'hausa', 'amharic')
+                        merged_lang_ds.push_to_hub(repo_id, config_name=lang_dir, token=self.hf_token)
+                        logger.info("  Push successful.")
+                    else:
+                        logger.warning("HF Token or Output Org not set. Skipping push for this language.")
+                except Exception as e:
+                    logger.error(f"  Failed to merge/push {lang_dir}: {e}")
             else:
-                logger.warning("HF Token or Output Org not set. Skipping push.")
-                
-        except Exception as e:
-            logger.error(f"Merge/Push failed: {e}")
+                logger.warning(f"  No valid datasets found for {lang_dir}")
 
     def generate_report(self):
         logger.info("\n=== FINAL REPORT ===")
