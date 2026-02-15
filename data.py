@@ -159,6 +159,10 @@ class DataPipeline:
             # Just rename columns and save. No decoding.
             logger.info("Skip Processing enabled: Renaming columns and saving raw data...")
             
+            # Extract column names from config
+            voice_col = ds_conf.get('voice_col')
+            text_col = ds_conf.get('text_col')
+
             # Check if columns exist
             if text_col not in dataset.column_names:
                 logger.error(f"Text column '{text_col}' not found in {ds_conf['name']}. Available: {dataset.column_names}")
