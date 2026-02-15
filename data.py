@@ -295,7 +295,7 @@ class DataPipeline:
         
         # Save / Upload
         logger.info(f"Saving to {local_path}")
-        dataset_processed.save_to_disk(local_path)
+        dataset.save_to_disk(local_path)
         
         # We assume the user wants the MERGED dataset pushed, not individual ones.
         # But per original design, we pushed individually.
