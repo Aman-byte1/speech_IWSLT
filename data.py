@@ -162,12 +162,18 @@ class DataPipeline:
             # Rename Voice Column to 'audio'
             voice_col = ds_conf.get('voice_col')
             if voice_col and voice_col != 'audio' and voice_col in dataset.column_names:
+                if 'audio' in dataset.column_names:
+                    logger.warning("Target column 'audio' already exists. Removing it to avoid conflict.")
+                    dataset = dataset.remove_columns(['audio'])
                 logger.info(f"Renaming {voice_col} -> audio")
                 dataset = dataset.rename_column(voice_col, 'audio')
             
             # Rename Text Column to 'text'
             text_col = ds_conf.get('text_col')
             if text_col and text_col != 'text' and text_col in dataset.column_names:
+                if 'text' in dataset.column_names:
+                    logger.warning("Target column 'text' already exists. Removing it to avoid conflict.")
+                    dataset = dataset.remove_columns(['text'])
                 logger.info(f"Renaming {text_col} -> text")
                 dataset = dataset.rename_column(text_col, 'text')
                 
