@@ -48,7 +48,7 @@ datasets:
     hf_path: "KYAGABA/amharic-speech-dataset-110HRS-V21"
     type: "voice"
     voice_col: "audio"
-    text_col: "text"
+    text_col: "transcription"
     split: "train"
 
   - name: "Fleurs_Somali"
@@ -143,7 +143,7 @@ datasets:
     hf_path: "Isma/alffa_wolof"
     type: "voice"
     voice_col: "audio"
-    text_col: "sentence"
+    text_col: "transcription"
     split: "train"
 
   - name: "Wolof_TTS"

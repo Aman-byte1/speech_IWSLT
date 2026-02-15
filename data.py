@@ -159,9 +159,16 @@ class DataPipeline:
             # Just rename columns and save. No decoding.
             logger.info("Skip Processing enabled: Renaming columns and saving raw data...")
             
+            # Check if columns exist
+            if text_col not in dataset.column_names:
+                logger.error(f"Text column '{text_col}' not found in {ds_conf['name']}. Available: {dataset.column_names}")
+                return
+            if voice_col not in dataset.column_names:
+                logger.error(f"Voice column '{voice_col}' not found in {ds_conf['name']}. Available: {dataset.column_names}")
+                return
+
             # Rename Voice Column to 'audio'
-            voice_col = ds_conf.get('voice_col')
-            if voice_col and voice_col != 'audio' and voice_col in dataset.column_names:
+            if voice_col != 'audio':
                 if 'audio' in dataset.column_names:
                     logger.warning("Target column 'audio' already exists. Removing it to avoid conflict.")
                     dataset = dataset.remove_columns(['audio'])
@@ -169,8 +176,7 @@ class DataPipeline:
                 dataset = dataset.rename_column(voice_col, 'audio')
             
             # Rename Text Column to 'text'
-            text_col = ds_conf.get('text_col')
-            if text_col and text_col != 'text' and text_col in dataset.column_names:
+            if text_col != 'text':
                 if 'text' in dataset.column_names:
                     logger.warning("Target column 'text' already exists. Removing it to avoid conflict.")
                     dataset = dataset.remove_columns(['text'])
@@ -180,6 +186,9 @@ class DataPipeline:
             # Keep only necessary columns
             if 'audio' in dataset.column_names and 'text' in dataset.column_names:
                 dataset = dataset.select_columns(['audio', 'text'])
+            else:
+                logger.error(f"Failed to normalize columns for {ds_conf['name']}. 'audio' or 'text' missing.")
+                return
 
         else:
             # === NORMAL PROCESSING MODE ===
