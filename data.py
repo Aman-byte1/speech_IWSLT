@@ -345,6 +345,12 @@ class DataPipeline:
                         keep_cols = ['audio', 'text', 'language', 'source']
                         ds = ds.select_columns([c for c in keep_cols if c in ds.column_names])
                         
+                        # CRITICAL FIX: Standardize 'audio' feature to avoid merge conflicts
+                        # (e.g., Audio(sr=None) vs Audio(sr=16000))
+                        if 'audio' in ds.column_names:
+                            from datasets import Audio
+                            ds = ds.cast_column('audio', Audio(sampling_rate=16000))
+
                         processed_datasets.append(ds)
                     except Exception as e:
                         logger.error(f"Failed to load {ds_name} for merging: {e}")
