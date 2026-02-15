@@ -40,7 +40,7 @@ datasets:
     hf_path: "badrex/amharic-speech"
     type: "voice"
     voice_col: "audio"
-    text_col: "text"
+    text_col: "transcription"
     split: "train"
 
   - name: "Amharic_110H_Kyagaba"
@@ -83,7 +83,7 @@ datasets:
     hf_path: "Isma/alffa_swahili"
     type: "voice"
     voice_col: "audio"
-    text_col: "sentence"
+    text_col: "transcription"
     split: "train"
 
   - name: "Swahili_Parallel"
@@ -113,13 +113,13 @@ datasets:
     text_col: "text"
     split: "train"
 
-  - name: "Hausa_TTS_Embed"
-    language: "hausa"
-    hf_path: "Aybee5/HausaTTSEmbed"
-    type: "voice"
-    voice_col: "audio"
-    text_col: "text"
-    split: "train"
+# - name: "Hausa_TTS_Embed"  # Broken on HF (Generator error)
+#   language: "hausa"
+#   hf_path: "Aybee5/HausaTTSEmbed"
+#   type: "voice"
+#   voice_col: "audio"
+#   text_col: "text"
+#   split: "train"
 
   - name: "WAXAL_Yoruba"
     language: "yoruba"
@@ -143,7 +143,7 @@ datasets:
     hf_path: "Isma/alffa_wolof"
     type: "voice"
     voice_col: "audio"
-    text_col: "sentence"
+    text_col: "transcription"
     split: "train"
 
   - name: "Wolof_TTS"
@@ -169,7 +169,7 @@ datasets:
     subset: "lin_asr"
     type: "voice"
     voice_col: "audio"
-    text_col: "text"
+    text_col: "transcription"
     split: "train"
 
   # --- SOUTHERN AFRICA (Zulu) ---
