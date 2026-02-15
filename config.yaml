@@ -26,14 +26,14 @@ models:
 # Dataset Registry
 datasets:
   # --- HORN OF AFRICA (Amharic, Somali) ---
-  - name: "CommonVoice_Amharic"
+  - name: "Fleurs_Amharic"
     language: "amharic"
-    hf_path: "mozilla-foundation/common_voice_13_0"
-    subset: "am"
+    hf_path: "WueNLP/sib-fleurs"
+    subset: "amh_Ethi" 
     type: "voice"
     voice_col: "audio"
-    text_col: "sentence"
-    split: "train"
+    text_col: "transcription"
+    split: "train+validation"
 
   - name: "Amharic_Speech_Badrex" # Placeholder for ALFFA/EthioSpeech if not directly on HF
     language: "amharic"
@@ -43,14 +43,14 @@ datasets:
     text_col: "text" # Verify column name
     split: "train"
 
-  - name: "CommonVoice_Somali"
+  - name: "Fleurs_Somali"
     language: "somali"
-    hf_path: "mozilla-foundation/common_voice_13_0"
-    subset: "so"
+    hf_path: "WueNLP/sib-fleurs"
+    subset: "som_Som"
     type: "voice"
     voice_col: "audio"
-    text_col: "sentence"
-    split: "train"
+    text_col: "transcription"
+    split: "train+validation"
 
   - name: "Somali_ASR_Skydheere"
     language: "somali"
@@ -63,6 +63,15 @@ datasets:
   # --- WEST & CENTRAL AFRICA (WAXAL Coverage: Hausa, Yoruba, Lingala, Wolof) ---
   # Note: Check specific subset names for google/WaxalNLP (e.g., 'ha', 'yo', 'ln', 'wo')
   
+  - name: "Nigerian_CommonVoice_Hausa"
+    language: "hausa"
+    hf_path: "benjaminogbonna/nigerian_common_voice_dataset"
+    subset: "ha" 
+    type: "voice"
+    voice_col: "audio"
+    text_col: "sentence"
+    split: "train"
+
   - name: "WAXAL_Hausa"
     language: "hausa"
     hf_path: "google/WaxalNLP"
@@ -117,15 +126,6 @@ datasets:
     text_col: "transcription" # Verify
     split: "train"
 
-  - name: "CommonVoice_Zulu"
-    language: "zulu"
-    hf_path: "mozilla-foundation/common_voice_13_0"
-    subset: "zu"
-    type: "voice"
-    voice_col: "audio"
-    text_col: "sentence"
-    split: "train"
-
   # --- NORTH AFRICA (Egyptian Arabic) ---
   - name: "MGB3_Egyptian_ASR"
     language: "arabic"
@@ -133,13 +133,4 @@ datasets:
     type: "voice"
     voice_col: "audio"
     text_col: "transcription" # Verify
-    split: "train"
-    
-  - name: "CommonVoice_Arabic"
-    language: "arabic"
-    hf_path: "mozilla-foundation/common_voice_13_0"
-    subset: "ar" # Contains mixed accents, post-processing filter recommended
-    type: "voice"
-    voice_col: "audio"
-    text_col: "sentence"
     split: "train"
