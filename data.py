@@ -379,7 +379,7 @@ class DataPipeline:
                     logger.info(f"  Merged {lang_dir}: {len(merged_lang_ds)} examples")
                     
                     if self.output_org and self.hf_token:
-                        repo_id = f"{self.output_org}/merged_speech_dataset"
+                        repo_id = f"{self.output_org}/merged_african_speech_dataset"
                         logger.info(f"  Pushing to {repo_id} (config: {lang_dir})...")
                         # Push with config_name = language code (e.g., 'hausa', 'amharic')
                         merged_lang_ds.push_to_hub(repo_id, config_name=lang_dir, token=self.hf_token)
