@@ -385,15 +385,6 @@ class DataPipeline:
         print(df.to_markdown(index=False))
         df.to_csv("report.csv", index=False)
 
-    args = parser.parse_args()
-    
-    pipeline = DataPipeline(args.config)
-    
-    if not args.merge_only:
-        pipeline.run(lang_filter=args.lang, skip_processing=args.skip_processing)
-    
-    pipeline.merge_and_push()
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="config.yaml")
