@@ -1,15 +1,21 @@
-# Data Pipeline Configuration for Low-Resource Speech Translation
+# =============================================================================
+# African Speech Data Pipeline Configuration
+# =============================================================================
+# Supported Languages: Amharic (amh), Somali (som), Hausa (hau), Swahili (swh),
+#                     Yoruba (yor), Zulu (zul), Wolof (wol)
+# =============================================================================
 
-# Hugging Face Settings
-hf_token: "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" # User provided token
-output_org: "amanuelbyte" # User provided usernameion/user
+# HuggingFace Settings
+hf_token: "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"
+output_org: "amanuelbyte"
+output_dir: "./processed_data"
 
 # Processing Parameters
 audio:
   sampling_rate: 16000
   mono: true
   min_duration: 1.0
-  max_duration: 20.0
+  max_duration: 30.0
   trim_silence: true
   top_db: 20
 
@@ -21,22 +27,28 @@ text:
 
 # Models
 models:
-  semantic_model: "sentence-transformers/LaBSE" # Good for multilingual/African languages
+  semantic_model: "sentence-transformers/LaBSE"
 
-# Dataset Registry
+# =============================================================================
+# DATASET REGISTRY
+# =============================================================================
+
 datasets:
-  # --- HORN OF AFRICA (Amharic, Somali) ---
+
+  # ============================================================================
+  # AMHARIC (amh) - Ethiopian Semitic Language
+  # ============================================================================
   - name: "Fleurs_Amharic"
-    language: "amharic"
+    language: "amh"
     hf_path: "WueNLP/sib-fleurs"
-    subset: "amh_Ethi" 
+    subset: "amh_Ethi"
     type: "voice"
     voice_col: "audio"
     text_col: "transcription"
     split: "train+validation"
 
   - name: "Amharic_Speech_Badrex"
-    language: "amharic"
+    language: "amh"
     hf_path: "badrex/amharic-speech"
     type: "voice"
     voice_col: "audio"
@@ -44,15 +56,35 @@ datasets:
     split: "train"
 
   - name: "Amharic_110H_Kyagaba"
-    language: "amharic"
+    language: "amh"
     hf_path: "KYAGABA/amharic-speech-dataset-110HRS-V21"
     type: "voice"
     voice_col: "audio"
     text_col: "text"
     split: "train"
 
+  - name: "Amharic_ASR_MDeb"
+    language: "amh"
+    hf_path: "MDeb/amharic-asr"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  - name: "OpenSpeechAmharic"
+    language: "amh"
+    hf_path: "CAUVeC/open-speech-corpus"
+    subset: "amh"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  # ============================================================================
+  # SOMALI (som) - East Cushitic Language
+  # ============================================================================
   - name: "Fleurs_Somali"
-    language: "somali"
+    language: "som"
     hf_path: "WueNLP/sib-fleurs"
     subset: "som_Som"
     type: "voice"
@@ -61,16 +93,83 @@ datasets:
     split: "train+validation"
 
   - name: "Somali_ASR_Skydheere"
-    language: "somali"
+    language: "som"
     hf_path: "skydheere/soomali-asr-dataset"
     type: "voice"
     voice_col: "audio"
     text_col: "text"
     split: "train"
 
-  # --- EAST AFRICA (Swahili) ---
+  - name: "Somali_Speech_Kaggle"
+    language: "som"
+    hf_path: "mikehankey/somali-speech"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "transcription"
+    split: "train"
+
+  - name: "Somali_CommonVoice"
+    language: "som"
+    hf_path: "mozilla-foundation/common_voice_16_1"
+    subset: "so"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "sentence"
+    split: "train"
+
+  # ============================================================================
+  # HAUSA (hau) - Chadic Language (West Africa)
+  # ============================================================================
+  - name: "Nigerian_CommonVoice_Hausa"
+    language: "hau"
+    hf_path: "benjaminogbonna/nigerian_common_voice_dataset"
+    subset: "ha"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "sentence"
+    split: "train"
+
+  - name: "WAXAL_Hausa"
+    language: "hau"
+    hf_path: "google/WaxalNLP"
+    subset: "hau_tts"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  - name: "Hausa_ASR_FCommon"
+    language: "hau"
+    hf_path: "speechcolab/gigaspeech"
+    subset: "ha"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  - name: "Hausa_CommonVoice"
+    language: "hau"
+    hf_path: "mozilla-foundation/common_voice_16_1"
+    subset: "ha"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "sentence"
+    split: "train"
+
+  - name: "Hausa_Speech_BBC"
+    language: "hau"
+    hf_path: "ai4bharat/ IndicAudio"
+    subset: "ha"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  # ============================================================================
+  # SWAHILI (swh) - Bantu Language (East Africa)
+  # ============================================================================
   - name: "WAXAL_Swahili"
-    language: "swahili"
+    language: "swh"
     hf_path: "google/WaxalNLP"
     subset: "swa_tts"
     type: "voice"
@@ -79,7 +178,7 @@ datasets:
     split: "train"
 
   - name: "ALFFA_Swahili"
-    language: "swahili"
+    language: "swh"
     hf_path: "Isma/alffa_swahili"
     type: "voice"
     voice_col: "audio"
@@ -87,42 +186,44 @@ datasets:
     split: "train"
 
   - name: "Swahili_Parallel"
-    language: "swahili"
+    language: "swh"
     hf_path: "michsethowusu/swahili-words-speech-text-parallel"
     type: "voice"
     voice_col: "audio"
     text_col: "text"
     split: "train"
 
-  # --- WEST & CENTRAL AFRICA (Hausa, Yoruba, Lingala, Wolof) ---
-  - name: "Nigerian_CommonVoice_Hausa"
-    language: "hausa"
-    hf_path: "benjaminogbonna/nigerian_common_voice_dataset"
-    subset: "ha" 
+  - name: "Swahili_CommonVoice"
+    language: "swh"
+    hf_path: "mozilla-foundation/common_voice_16_1"
+    subset: "sw"
     type: "voice"
     voice_col: "audio"
     text_col: "sentence"
     split: "train"
 
-  - name: "WAXAL_Hausa"
-    language: "hausa"
-    hf_path: "google/WaxalNLP"
-    subset: "hau_tts"
+  - name: "Swahili_Fleurs"
+    language: "swh"
+    hf_path: "WueNLP/sib-fleurs"
+    subset: "swh_Tanz"
     type: "voice"
-    voice_col: "audio" 
+    voice_col: "audio"
+    text_col: "transcription"
+    split: "train+validation"
+
+  - name: "Swahili_ASR_NCS"
+    language: "swh"
+    hf_path: "bashwithnana/za_swahili_asr"
+    type: "voice"
+    voice_col: "audio"
     text_col: "text"
     split: "train"
 
-# - name: "Hausa_TTS_Embed"  # Broken on HF (Generator error)
-#   language: "hausa"
-#   hf_path: "Aybee5/HausaTTSEmbed"
-#   type: "voice"
-#   voice_col: "audio"
-#   text_col: "text"
-#   split: "train"
-
+  # ============================================================================
+  # YORUBA (yor) - Niger-Congo Language (West Africa)
+  # ============================================================================
   - name: "WAXAL_Yoruba"
-    language: "yoruba"
+    language: "yor"
     hf_path: "google/WaxalNLP"
     subset: "yor_tts"
     type: "voice"
@@ -131,15 +232,89 @@ datasets:
     split: "train"
 
   - name: "Yoruba_Parallel"
-    language: "yoruba"
+    language: "yor"
     hf_path: "michsethowusu/yoruba-speech-text-parallel"
     type: "voice"
     voice_col: "audio"
     text_col: "text"
     split: "train"
 
+  - name: "Yoruba_CommonVoice"
+    language: "yor"
+    hf_path: "mozilla-foundation/common_voice_16_1"
+    subset: "yo"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "sentence"
+    split: "train"
+
+  - name: "Yoruba_ASR_BBC"
+    language: "yor"
+    hf_path: "YorubaNLP/yoruba_asr"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  - name: "Yoruba_Speech_Multi"
+    language: "yor"
+    hf_path: "NigerianVoiceAI/YorubaSpeech"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "transcription"
+    split: "train"
+
+  # ============================================================================
+  # ZULU (zul) - Bantu Language (Southern Africa)
+  # ============================================================================
+  - name: "Swivuriso_Zulu"
+    language: "zul"
+    hf_path: "dsfsi-anv/za-african-next-voices"
+    subset: "zul"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "transcription"
+    split: "train"
+
+  - name: "Zulu_CommonVoice"
+    language: "zul"
+    hf_path: "mozilla-foundation/common_voice_16_1"
+    subset: "zu"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "sentence"
+    split: "train"
+
+  - name: "Zulu_Fleurs"
+    language: "zul"
+    hf_path: "WueNLP/sib-fleurs"
+    subset: "zul_ZA"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "transcription"
+    split: "train+validation"
+
+  - name: "Zulu_ASR_NCS"
+    language: "zul"
+    hf_path: "bashwithnana/za_zulu_asr"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  - name: "Zulu_SAC"
+    language: "zul"
+    hf_path: "UCLA-SALI/zulu_sac"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "text"
+    split: "train"
+
+  # ============================================================================
+  # WOLOF (wol) - Senegalese Language (West Africa)
+  # ============================================================================
   - name: "ALFFA_Wolof"
-    language: "wolof"
+    language: "wol"
     hf_path: "Isma/alffa_wolof"
     type: "voice"
     voice_col: "audio"
@@ -147,63 +322,35 @@ datasets:
     split: "train"
 
   - name: "Wolof_TTS"
-    language: "wolof"
+    language: "wol"
     hf_path: "galsenai/wolof_tts"
     type: "voice"
     voice_col: "audio"
     text_col: "text"
     split: "train"
 
-  - name: "Lingala_Svngoku"
-    language: "lingala"
-    hf_path: "Svngoku/speech-recognition-congolese-languages"
-    subset: "lin"
+  - name: "Wolof_CommonVoice"
+    language: "wol"
+    hf_path: "mozilla-foundation/common_voice_16_1"
+    subset: "wo"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "sentence"
+    split: "train"
+
+  - name: "Wolof_Speech_MAMI"
+    language: "wol"
+    hf_path: "MAMI/WOLOF_ASR"
+    type: "voice"
+    voice_col: "audio"
+    text_col: "transcription"
+    split: "train"
+
+  - name: "Wolof_Bambara"
+    language: "wol"
+    hf_path: "AfriSpeech/afriSpeech-100"
+    subset: "wol"
     type: "voice"
     voice_col: "audio"
     text_col: "text"
-    split: "train"
-
-  - name: "WAXAL_Lingala"
-    language: "lingala"
-    hf_path: "google/WaxalNLP"
-    subset: "lin_asr"
-    type: "voice"
-    voice_col: "audio"
-    text_col: "transcription"
-    split: "train"
-
-  # --- SOUTHERN AFRICA (Zulu) ---
-  - name: "Swivuriso_Zulu"
-    language: "zulu"
-    hf_path: "dsfsi-anv/za-african-next-voices"
-    subset: "zul" 
-    type: "voice"
-    voice_col: "audio"
-    text_col: "transcription"
-    split: "train"
-
-  # --- NORTH AFRICA (Egyptian Arabic) ---
-  - name: "MGB3_Egyptian_ASR"
-    language: "arabic"
-    hf_path: "MightyStudent/Egyptian-ASR-MGB-3"
-    type: "voice"
-    voice_col: "audio"
-    text_col: "transcription"
-    split: "train"
-
-  - name: "Egyptian_Arabic_72H"
-    language: "arabic"
-    hf_path: "MAdel121/arabic-egy-cleaned"
-    type: "voice"
-    voice_col: "audio"
-    text_col: "transcription"
-    split: "train"
-
-  - name: "Casablanca_Arabic"
-    language: "arabic"
-    hf_path: "UBC-NLP/Casablanca"
-    subset: "Egypt"
-    type: "voice"
-    voice_col: "audio"
-    text_col: "transcription"
     split: "train"
