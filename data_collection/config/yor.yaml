@@ -19,7 +19,7 @@ text:
 
 datasets:
   - name: sib_fleurs_yor
-    enabled: true
+    enabled: false   # subset yor_Latn not found in sib-fleurs
     source: hf
     language: yor
     hf_path: WueNLP/sib-fleurs
@@ -29,7 +29,7 @@ datasets:
     text_col: transcription
 
   - name: common_voice_yor
-    enabled: true
+    enabled: false   # subset 'yo' not found in common_voice_17_0
     source: hf
     language: yor
     hf_path: mozilla-foundation/common_voice_17_0

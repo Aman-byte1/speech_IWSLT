@@ -19,7 +19,7 @@ text:
 
 datasets:
   - name: sib_fleurs_wol
-    enabled: true
+    enabled: false   # subset wol_Latn not found in sib-fleurs
     source: hf
     language: wol
     hf_path: WueNLP/sib-fleurs
@@ -29,7 +29,7 @@ datasets:
     text_col: transcription
 
   - name: common_voice_wol
-    enabled: true
+    enabled: false   # subset 'wo' not found in common_voice_17_0
     source: hf
     language: wol
     hf_path: mozilla-foundation/common_voice_17_0
@@ -39,7 +39,7 @@ datasets:
     text_col: sentence
 
   - name: alffa_wolof_isma
-    enabled: true
+    enabled: false   # no splits loaded — dataset unavailable
     source: hf
     language: wol
     hf_path: Isma/alffa_wolof
@@ -57,7 +57,7 @@ datasets:
     text_col: text
 
   - name: vonewman_wolof_audio_data
-    enabled: true
+    enabled: false   # no splits loaded — dataset unavailable
     source: hf
     language: wol
     hf_path: vonewman/wolof-audio-data

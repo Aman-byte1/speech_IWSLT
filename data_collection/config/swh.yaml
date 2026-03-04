@@ -29,7 +29,7 @@ datasets:
     text_col: transcription
 
   - name: common_voice_swh
-    enabled: true
+    enabled: false   # subset 'sw' not found in common_voice_17_0
     source: hf
     language: swh
     hf_path: mozilla-foundation/common_voice_17_0
@@ -48,7 +48,7 @@ datasets:
     text_col: text
 
   - name: swahili_speech_400hr_badrex
-    enabled: true
+    enabled: false   # no splits loaded — dataset may be unavailable
     source: hf
     language: swh
     hf_path: badrex/swahili-speech-400hr

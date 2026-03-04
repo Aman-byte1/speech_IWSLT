@@ -51,5 +51,5 @@ datasets:
     language: arz
     hf_path: MohamedGomaa30/Egy-Speech-DeepClean_v0
     split: "train"
-    audio_col: audio
+    audio_col: separated_target_audio
     text_col: text

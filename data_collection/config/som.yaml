@@ -29,7 +29,7 @@ datasets:
     text_col: transcription
 
   - name: common_voice_som
-    enabled: true
+    enabled: false   # subset 'so' not found in common_voice_17_0
     source: hf
     language: som
     hf_path: mozilla-foundation/common_voice_17_0

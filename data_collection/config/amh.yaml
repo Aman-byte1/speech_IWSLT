@@ -29,7 +29,7 @@ datasets:
     text_col: transcription
 
   - name: common_voice_amh
-    enabled: true
+    enabled: false   # subset 'am' not found in common_voice_17_0; use mozilla_cv_24 instead
     source: hf
     language: amh
     hf_path: mozilla-foundation/common_voice_17_0
