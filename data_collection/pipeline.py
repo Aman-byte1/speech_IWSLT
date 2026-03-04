@@ -594,6 +594,16 @@ class Pipeline:
             merged = concatenate_datasets(parts)
             log.info(f"  ⇒ {lc} merged rows: {len(merged)}")
 
+            # --- Export to CSV ---
+            csv_path = self.data_dir / f"{lc}_merged.csv"
+            try:
+                # Remove audio column to keep CSV size small
+                csv_ds = merged.remove_columns(["audio"]) if "audio" in merged.column_names else merged
+                csv_ds.to_csv(csv_path, index=False)
+                log.info(f"  ✔ saved CSV metadata to {csv_path}")
+            except Exception as e:
+                log.error(f"  - failed to save CSV: {e}")
+
             for attempt in range(1, 4):
                 try:
                     log.info(f"  Pushing {lc} (attempt {attempt}/3)")
