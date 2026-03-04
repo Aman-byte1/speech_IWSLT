@@ -27,15 +27,10 @@ from dataclasses import dataclass, field, asdict
 os.environ["HF_HUB_DISABLE_XET"] = "1"
 
 import pandas as pd
-import torch
 from tqdm import tqdm
-import librosa
 import soundfile as sf
 import numpy as np
 from datasets import load_dataset, Dataset, Audio, Value, load_from_disk, concatenate_datasets
-from transformers import AutoTokenizer, AutoModel
-from sentence_transformers import SentenceTransformer, util
-import noisereduce as nr
 import re
 
 # Setup Logging with file rotation
@@ -210,12 +205,17 @@ class TextProcessor:
         # Load Semantic Model if needed (Lazy loading)
         if 'semantic_model' in self.models_config and self.models_config['semantic_model']:
             try:
+                import torch
+                from sentence_transformers import SentenceTransformer
+                
                 logger.info(f"Loading Semantic Model: {self.models_config['semantic_model']}")
                 device = "cuda" if torch.cuda.is_available() else "cpu"
                 self.semantic_model = SentenceTransformer(
                     self.models_config['semantic_model'],
                     device=device
                 )
+            except ImportError as e:
+                logger.warning(f"Required ML library missing for semantic filtering: {e}. Please install sentence-transformers and torch. Semantic filtering will be skipped.")
             except Exception as e:
                 logger.warning(f"Could not load semantic model: {e}. Semantic filtering will be skipped.")
 
@@ -301,6 +301,7 @@ class AudioProcessor:
     def load_audio(self, audio_path: str) -> tuple:
         """Load audio file and return waveform and sample rate."""
         try:
+            import librosa
             y, sr = librosa.load(audio_path, sr=self.target_sr, mono=True)
 
             # Trim silence if enabled
@@ -308,6 +309,9 @@ class AudioProcessor:
                 y, _ = librosa.effects.trim(y, top_db=self.top_db)
 
             return y, sr
+        except ImportError:
+            logger.error("librosa is required for normal audio processing. Install it with `pip install librosa`.")
+            raise
         except Exception as e:
             logger.warning(f"Error loading audio {audio_path}: {e}")
             return None, 0
@@ -315,6 +319,7 @@ class AudioProcessor:
     def get_duration(self, audio_path: str) -> float:
         """Get duration of audio file in seconds."""
         try:
+            import librosa
             return librosa.get_duration(path=audio_path)
         except:
             y, sr = self.load_audio(audio_path)

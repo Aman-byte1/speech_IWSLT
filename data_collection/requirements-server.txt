@@ -1,0 +1,12 @@
+# ── Core Data Collection ───────────────────────────────────────────────────────
+datasets>=2.18.0
+huggingface-hub>=0.22.0
+
+# ── Data utilities ───────────────────────────────────────────────────────────
+pandas>=2.0.0
+numpy>=1.24.0
+pyyaml>=6.0
+tqdm>=4.65.0
+tabulate>=0.9.0
+requests>=2.31.0
+soundfile>=0.12.0
