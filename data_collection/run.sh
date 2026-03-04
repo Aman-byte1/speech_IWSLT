@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
 # ============================================================
 # data_collection/run.sh
-# Runs the African Speech data pipeline.
+# Runs the unified African Speech data pipeline.
+#
+# Handles BOTH:
+#   - HuggingFace datasets  (source: hf)
+#   - Mozilla Common Voice 24.0  (source: mozilla_cv)
 #
 # Usage:
 #   bash run.sh           # process ALL languages
 #   bash run.sh amh       # process a single language
+#   bash run.sh --status  # show processing report
 # ============================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$SCRIPT_DIR/config"
-DATA_SCRIPT="$SCRIPT_DIR/data.py"
-CHECKPOINT_DIR="$SCRIPT_DIR/checkpoints"
+PIPELINE_SCRIPT="$SCRIPT_DIR/pipeline.py"
 VENV_DIR="$SCRIPT_DIR/.venv"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
@@ -37,15 +41,37 @@ else
     warn "requirements.txt not found at $REQUIREMENTS — skipping install."
 fi
 
-# ── HF token check ────────────────────────────────────────────
+# ── Token checks ─────────────────────────────────────────────
 if [ -z "${HF_TOKEN:-}" ]; then
     warn "HF_TOKEN is not set. Gated datasets will be skipped."
     warn "Export it with: export HF_TOKEN=hf_xxxxxxxxxx"
 fi
 
-# ── Languages ─────────────────────────────────────────────────
-LANG_ARG="${1:-}"
+if [ -z "${MOZ_API_KEY:-}" ]; then
+    warn "MOZ_API_KEY is not set. Mozilla Common Voice datasets will be skipped."
+    warn "Export it with: export MOZ_API_KEY=your_key_here"
+    warn "(You can also set moz_api_key in the YAML config files)"
+fi
 
+# ── Parse arguments ──────────────────────────────────────────
+LANG_ARG=""
+EXTRA_FLAGS=""
+
+for arg in "$@"; do
+    case "$arg" in
+        --status)
+            EXTRA_FLAGS="$EXTRA_FLAGS --status"
+            ;;
+        --merge-only)
+            EXTRA_FLAGS="$EXTRA_FLAGS --merge-only"
+            ;;
+        *)
+            LANG_ARG="$arg"
+            ;;
+    esac
+done
+
+# ── Languages ─────────────────────────────────────────────────
 if [ -n "$LANG_ARG" ]; then
     LANGUAGES=("$LANG_ARG")
 else
@@ -59,14 +85,6 @@ fi
 info "Languages to process: ${LANGUAGES[*]}"
 
 # ── Run ───────────────────────────────────────────────────────
-SKIP_PROC_FLAG=""
-for arg in "$@"; do
-    if [ "$arg" == "--skip-processing" ]; then
-        SKIP_PROC_FLAG="--skip_processing"
-        break
-    fi
-done
-
 FAILED=()
 
 for LANG in "${LANGUAGES[@]}"; do
@@ -82,10 +100,9 @@ for LANG in "${LANGUAGES[@]}"; do
     info "  Language: $LANG"
     info "==========================================="
 
-    python3 "$DATA_SCRIPT" \
+    python3 "$PIPELINE_SCRIPT" \
         --config "$CONFIG_FILE" \
-        --checkpoint_dir "$CHECKPOINT_DIR/$LANG" \
-        $SKIP_PROC_FLAG \
+        $EXTRA_FLAGS \
         && info "✓ $LANG done" \
         || { warn "✗ $LANG failed."; FAILED+=("$LANG"); }
 done

@@ -1,5 +1,6 @@
 repo_id: "amanuelbyte/african_speech_dataset"
 hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
+moz_api_key: null        # set via: export MOZ_API_KEY=... (or set here)
 
 data_dir: "./processed_data"
 num_proc: 2
@@ -27,16 +28,6 @@ datasets:
     audio_col: audio
     text_col: transcription
 
-  - name: common_voice_hau
-    enabled: true
-    source: hf
-    language: hau
-    hf_path: mozilla-foundation/common_voice_17_0
-    subset: ha
-    split: "train+validation+test"
-    audio_col: audio
-    text_col: sentence
-
   - name: nigerian_common_voice_hausa
     enabled: true
     source: hf
@@ -46,3 +37,39 @@ datasets:
     split: "train"
     audio_col: audio
     text_col: sentence
+
+  - name: vaghawan_hausa_tts_22k
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: vaghawan/hausa-tts-22k
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: text
+
+  - name: suleiman2003_hausa_speech_processed2
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: suleiman2003/hausa-speech-processed2
+    split: "train"
+    audio_col: audio
+    text_col: transcript
+
+  - name: shunyalabs_hausa_speech_dataset
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: shunyalabs/hausa-speech-dataset
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: transcript
+
+  - name: common_voice_mozilla_24_hau
+    enabled: true
+    source: mozilla_cv
+    language: hau
+    moz_dataset_id: "cmj8u3p6w00alnxxbby9yqbms"
+    cv_folder: "ha"
+    audio_col: audio
+    text_col: text

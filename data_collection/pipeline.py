@@ -1,4 +1,18 @@
 #!/usr/bin/env python3
+"""
+Unified African Speech Data Pipeline
+=====================================
+Handles BOTH:
+  - HuggingFace datasets  (source: hf)
+  - Mozilla Common Voice 24.0 via DataCollective API  (source: mozilla_cv)
+
+Usage:
+  python pipeline.py --config config/amh.yaml
+  python pipeline.py --config config/amh.yaml --lang amh
+  python pipeline.py --config config/amh.yaml --merge-only
+  python pipeline.py --config config/amh.yaml --status
+"""
+
 import argparse
 import io
 import json
@@ -6,17 +20,20 @@ import logging
 import os
 import re
 import sys
+import tarfile
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 os.environ["HF_HUB_DISABLE_XET"] = "1"
 
 import yaml
 import pandas as pd
 import numpy as np
+import requests
 import soundfile as sf
 from mutagen import File as MutagenFile
+from tqdm import tqdm
 
 from datasets import (
     Audio,
@@ -27,14 +44,18 @@ from datasets import (
     load_dataset,
     load_from_disk,
 )
-from datasets.features import Sequence  # IMPORTANT
+from datasets.features import Sequence
 
 LOG_FMT = "%(asctime)s │ %(levelname)-7s │ %(message)s"
 logging.basicConfig(level=logging.INFO, format=LOG_FMT, handlers=[logging.StreamHandler(sys.stdout)])
 log = logging.getLogger("pipeline")
 
+# ─────────────────── Mozilla API ───────────────────
+MOZ_API_BASE = "https://datacollective.mozillafoundation.org/api"
+SPLITS_TO_TRY = ["train.tsv", "dev.tsv", "test.tsv", "validated.tsv"]
 
-# ---------------- Checkpoint ----------------
+
+# ─────────────────── Checkpoint ───────────────────
 class Checkpoint:
     def __init__(self, path: Path):
         self.path = path
@@ -83,7 +104,7 @@ class Checkpoint:
         self._save()
 
 
-# ---------------- Text cleaning ----------------
+# ─────────────────── Text cleaning ───────────────────
 _TAG_RE = re.compile(r"<[^>]+>")
 _WS_RE = re.compile(r"\s+")
 
@@ -96,7 +117,7 @@ def clean_text(s: Any, lowercase: bool = True) -> str:
     return s.lower() if lowercase else s
 
 
-# ---------------- Duration (no waveform decode) ----------------
+# ─────────────────── Duration helpers ───────────────────
 def _duration_from_path(path: str) -> Optional[float]:
     if not path:
         return None
@@ -110,7 +131,6 @@ def _duration_from_path(path: str) -> Optional[float]:
                     return float(length)
     except Exception:
         pass
-
     try:
         info = sf.info(path)
         if info.frames and info.samplerate:
@@ -139,15 +159,12 @@ def _duration_from_bytes(b: bytes) -> Optional[float]:
     return None
 
 def duration_from_audio_field(a: Any, default_sr: int) -> Optional[float]:
-    # Handle Sequence(Audio): list of dicts
     if isinstance(a, list) and a:
-        # take first non-null duration
         for item in a:
             d = duration_from_audio_field(item, default_sr)
             if d is not None:
                 return d
         return None
-
     if a is None:
         return None
     if isinstance(a, str):
@@ -174,7 +191,91 @@ def duration_from_audio_field(a: Any, default_sr: int) -> Optional[float]:
     return None
 
 
-# ---------------- Pipeline ----------------
+# ─────────────────── Mozilla CV helpers ───────────────────
+
+def _moz_get_download_url(dataset_id: str, moz_api_key: str, retries: int = 3) -> str:
+    """Call Mozilla DataCollective API to get a signed download URL."""
+    url = f"{MOZ_API_BASE}/datasets/{dataset_id}/download"
+    last_err = None
+    for attempt in range(1, retries + 1):
+        try:
+            r = requests.post(
+                url,
+                headers={"Authorization": f"Bearer {moz_api_key}", "Content-Type": "application/json"},
+                timeout=120,
+            )
+            r.raise_for_status()
+            j = r.json()
+            dl = j.get("downloadUrl")
+            if not dl:
+                raise RuntimeError(f"No downloadUrl in response: keys={list(j.keys())}")
+            return dl
+        except Exception as e:
+            last_err = e
+            if attempt < retries:
+                time.sleep(10 * attempt)
+    raise RuntimeError(f"Failed to get download URL after {retries} attempts: {last_err}")
+
+
+def _download_file(url: str, out_path: Path):
+    """Download a file with progress bar. Skips if already downloaded."""
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    if out_path.exists() and out_path.stat().st_size > 0:
+        log.info(f"  Already downloaded: {out_path.name}")
+        return
+
+    with requests.get(url, stream=True, timeout=120) as r:
+        r.raise_for_status()
+        total = int(r.headers.get("content-length", "0") or 0)
+        with open(out_path, "wb") as f, tqdm(
+            total=total, unit="B", unit_scale=True, desc=f"Downloading {out_path.name}"
+        ) as pbar:
+            for chunk in r.iter_content(chunk_size=1024 * 1024):
+                if chunk:
+                    f.write(chunk)
+                    pbar.update(len(chunk))
+
+
+def _extract_tar(tar_path: Path, out_dir: Path):
+    """Extract tar.gz archive. Skips if already extracted."""
+    if out_dir.exists() and any(out_dir.iterdir()):
+        log.info(f"  Already extracted: {out_dir.name}")
+        return
+    out_dir.mkdir(parents=True, exist_ok=True)
+    log.info(f"  Extracting {tar_path.name} ...")
+    with tarfile.open(tar_path, "r:gz") as tf:
+        tf.extractall(out_dir)
+
+
+def _find_cv_root(extract_dir: Path, cv_folder: str) -> Path:
+    """Locate the Common Voice root containing clips/ and split TSVs."""
+    candidates = [extract_dir / cv_folder, extract_dir]
+    for c in candidates:
+        if (c / "clips").exists() and any((c / s).exists() for s in SPLITS_TO_TRY):
+            return c
+    for clips in extract_dir.rglob("clips"):
+        parent = clips.parent
+        if any((parent / s).exists() for s in SPLITS_TO_TRY):
+            return parent
+    raise FileNotFoundError(f"Could not locate Common Voice structure under {extract_dir}")
+
+
+def _load_cv_tsvs(cv_root: Path) -> pd.DataFrame:
+    """Load and merge all available split TSVs (train, dev, test, validated)."""
+    dfs = []
+    for split in SPLITS_TO_TRY:
+        p = cv_root / split
+        if not p.exists():
+            continue
+        df = pd.read_csv(p, sep="\t", quoting=3, on_bad_lines="skip")
+        if "path" in df.columns and "sentence" in df.columns:
+            dfs.append(df[["path", "sentence"]])
+    if not dfs:
+        raise FileNotFoundError(f"No usable TSV splits found in {cv_root}")
+    return pd.concat(dfs, ignore_index=True).drop_duplicates(subset=["path"])
+
+
+# ─────────────────── Pipeline ───────────────────
 class Pipeline:
     def __init__(self, cfg_path: str):
         self.cfg = yaml.safe_load(Path(cfg_path).read_text(encoding="utf-8"))
@@ -185,6 +286,10 @@ class Pipeline:
 
         self.repo_id = self.cfg.get("repo_id")
         self.hf_token = self.cfg.get("hf_token") or os.environ.get("HF_TOKEN")
+        self.moz_api_key = self.cfg.get("moz_api_key") or os.environ.get("MOZ_API_KEY")
+
+        # Mozilla CV workspace directory
+        self.moz_work_dir = Path(self.cfg.get("moz_work_dir", "./moz_cv_work"))
 
         audio_cfg = self.cfg.get("audio", {})
         self.target_sr = int(audio_cfg.get("sampling_rate", 16000))
@@ -221,20 +326,30 @@ class Pipeline:
                 log.info(f"✔ SKIP {name} (already processed)")
                 continue
 
-            log.info(f"\n{'-'*72}\n▶ START {name} (lang={lc})")
+            source = dsc.get("source", "hf")
+            log.info(f"\n{'-'*72}\n▶ START {name} (lang={lc}, source={source})")
+
             try:
-                ds = self._load_hf(dsc)
+                # ── Branch by source type ──
+                if source == "mozilla_cv":
+                    ds = self._load_mozilla_cv(dsc)
+                else:
+                    ds = self._load_hf(dsc)
+
                 log.info(f"  Loaded {len(ds)} rows. cols={ds.column_names}")
 
-                ds = self._normalize(ds, dsc)
+                # ── Normalize columns ──
+                if source != "mozilla_cv":
+                    # mozilla_cv already returns normalized columns
+                    ds = self._normalize(ds, dsc)
 
-                # 1) Make audio NON-decoding safely (handles sequence audio)
+                # 1) Make audio NON-decoding safely
                 ds = self._force_audio_decode_false(ds)
 
                 # 2) If audio is a list (Sequence(Audio)), unwrap to first element
                 ds = self._unwrap_audio_if_list(ds)
 
-                # 3) Now we can safely filter without torchcodec
+                # 3) Filter and clean
                 before = len(ds)
                 ds = ds.filter(self._filter_fn, num_proc=self.num_proc, desc=f"Filter {name}")
                 ds = ds.map(self._clean_map, num_proc=self.num_proc, desc=f"Clean {name}")
@@ -251,6 +366,8 @@ class Pipeline:
             except Exception as e:
                 log.error(f"✘ FAIL {name} → {e}")
                 self.ckpt.set_ds_failed(name, str(e))
+
+    # ─────────────────── HuggingFace loader ───────────────────
 
     def _load_hf(self, dsc: dict) -> Dataset:
         hf_path = dsc["hf_path"]
@@ -269,6 +386,91 @@ class Pipeline:
             return concatenate_datasets(parts)
 
         return load_dataset(hf_path, subset, split=split, token=self.hf_token)
+
+    # ─────────────────── Mozilla Common Voice loader ───────────────────
+
+    def _load_mozilla_cv(self, dsc: dict) -> Dataset:
+        """
+        Download, extract, parse TSVs, and build a Dataset from Mozilla
+        Common Voice 24.0 archive using the DataCollective API.
+        Returns a Dataset with columns: audio, text, lang, source.
+        """
+        if not self.moz_api_key:
+            raise RuntimeError(
+                "MOZ_API_KEY not set. Set it in config (moz_api_key) "
+                "or env var (export MOZ_API_KEY=...)."
+            )
+
+        dataset_id = dsc.get("moz_dataset_id")
+        if not dataset_id:
+            raise RuntimeError(f"No moz_dataset_id in config for {dsc['name']}")
+
+        cv_folder = dsc.get("cv_folder", "")
+        lc = dsc["language"]
+        name = dsc["name"]
+
+        tar_path = self.moz_work_dir / f"cv24_{lc}.tar.gz"
+        extract_dir = self.moz_work_dir / f"cv24_{lc}_extracted"
+
+        # ── Download ──
+        log.info(f"  [Mozilla CV] Getting download URL for {lc} ...")
+        dl_url = _moz_get_download_url(dataset_id, self.moz_api_key)
+        _download_file(dl_url, tar_path)
+
+        # ── Extract ──
+        _extract_tar(tar_path, extract_dir)
+
+        # ── Find root and load TSVs ──
+        cv_root = _find_cv_root(extract_dir, cv_folder)
+        log.info(f"  [Mozilla CV] cv_root = {cv_root}")
+
+        df = _load_cv_tsvs(cv_root)
+        clips_dir = cv_root / "clips"
+
+        # ── Build rows: filter + pack audio bytes ──
+        audio_list: List[Dict] = []
+        texts: List[str] = []
+
+        for rel, sent in tqdm(
+            zip(df["path"].astype(str), df["sentence"].astype(str)),
+            total=len(df),
+            desc=f"Build {name}",
+        ):
+            p = clips_dir / rel
+            if not p.exists():
+                continue
+
+            t = sent.strip()
+            if self.lowercase:
+                t = t.lower()
+            if not (self.min_chars <= len(t) <= self.max_chars):
+                continue
+
+            # Duration check (header-based, no waveform decode)
+            d = _duration_from_path(str(p))
+            if d is not None and not (self.min_dur <= d <= self.max_dur):
+                continue
+
+            # Pack audio bytes for portability on HF
+            b = p.read_bytes()
+            audio_list.append({"path": p.name, "bytes": b})
+            texts.append(t)
+
+        log.info(f"  [Mozilla CV] {lc}: {len(texts)} rows after filtering")
+
+        if not texts:
+            raise RuntimeError(f"Mozilla CV {lc}: 0 rows after filtering")
+
+        ds = Dataset.from_dict({
+            "audio": audio_list,
+            "text": texts,
+            "lang": [lc] * len(texts),
+            "source": [name] * len(texts),
+        })
+        ds = ds.cast_column("audio", Audio(decode=False))
+        return ds
+
+    # ─────────────────── Column normalization ───────────────────
 
     def _normalize(self, ds: Dataset, dsc: dict) -> Dataset:
         audio_col = dsc.get("audio_col", dsc.get("voice_col", "audio"))
@@ -291,18 +493,14 @@ class Pipeline:
                 ds = ds.remove_columns(["text"])
             ds = ds.rename_column(text_col, "text")
 
-        # keep only canonical + add metadata
         ds = ds.remove_columns([c for c in ds.column_names if c not in ("audio", "text")])
         ds = ds.add_column("lang", [lc] * len(ds))
         ds = ds.add_column("source", [src] * len(ds))
         return ds
 
+    # ─────────────────── Audio feature helpers ───────────────────
+
     def _force_audio_decode_false(self, ds: Dataset) -> Dataset:
-        """
-        Try:
-          - Audio(decode=False)
-          - Sequence(Audio(decode=False))  <-- fixes sib-fleurs list-of-audio
-        """
         try:
             return ds.cast_column("audio", Audio(sampling_rate=self.target_sr, decode=False))
         except Exception as e1:
@@ -310,15 +508,10 @@ class Pipeline:
             try:
                 return ds.cast_column("audio", Sequence(Audio(sampling_rate=self.target_sr, decode=False)))
             except Exception as e2:
-                # If this fails, do NOT touch audio in filtering (or install torchcodec)
                 log.warning(f"  audio cast Sequence(Audio(decode=False)) failed: {e2}")
                 return ds
 
     def _unwrap_audio_if_list(self, ds: Dataset) -> Dataset:
-        """
-        If audio is list of {bytes,path} (Sequence(Audio)), take the first element.
-        This makes all datasets consistent: audio becomes a single Audio column.
-        """
         feat = ds.features.get("audio")
         is_seq_audio = isinstance(feat, Sequence) and isinstance(feat.feature, Audio)
         if not is_seq_audio:
@@ -335,6 +528,8 @@ class Pipeline:
         ds = ds.cast_column("audio", Audio(sampling_rate=self.target_sr, decode=False))
         return ds
 
+    # ─────────────────── Filter / Clean ───────────────────
+
     def _filter_fn(self, ex: Dict[str, Any]) -> bool:
         t = clean_text(ex.get("text"), lowercase=self.lowercase)
         if not t:
@@ -347,12 +542,14 @@ class Pipeline:
 
         d = duration_from_audio_field(ex.get("audio"), default_sr=self.target_sr)
         if d is None:
-            return True  # keep if we can't compute without decoding
+            return True
         return self.min_dur <= d <= self.max_dur
 
     def _clean_map(self, ex: Dict[str, Any]) -> Dict[str, Any]:
         ex["text"] = clean_text(ex.get("text"), lowercase=self.lowercase)
         return ex
+
+    # ─────────────────── Merge & Push ───────────────────
 
     def merge_and_push(self, lang: Optional[str]):
         if not self.repo_id or not self.hf_token:
@@ -384,7 +581,6 @@ class Pipeline:
                     if drop:
                         d = d.remove_columns(drop)
 
-                    # Ensure final schema: single Audio(decode=False)
                     d = d.cast_column("audio", Audio(sampling_rate=self.target_sr, decode=False))
                     parts.append(d)
                     log.info(f"  + {ds_dir.name:35s} {len(d):8d} rows")
@@ -416,6 +612,8 @@ class Pipeline:
                     if attempt < 3:
                         time.sleep(20 * attempt)
 
+    # ─────────────────── Report ───────────────────
+
     def report(self):
         log.info(f"\n{'='*72}\nREPORT\n{'='*72}")
         rows = []
@@ -439,11 +637,11 @@ class Pipeline:
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--config", default="config.yaml")
-    ap.add_argument("--lang")
-    ap.add_argument("--merge-only", action="store_true")
-    ap.add_argument("--status", action="store_true")
+    ap = argparse.ArgumentParser(description="Unified African Speech Data Pipeline")
+    ap.add_argument("--config", default="config.yaml", help="Path to language YAML config")
+    ap.add_argument("--lang", help="Process only this language code")
+    ap.add_argument("--merge-only", action="store_true", help="Skip processing, only merge and push")
+    ap.add_argument("--status", action="store_true", help="Show processing report only")
     args = ap.parse_args()
 
     if not os.path.exists(args.config):

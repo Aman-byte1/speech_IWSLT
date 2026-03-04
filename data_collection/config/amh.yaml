@@ -1,5 +1,6 @@
 repo_id: "amanuelbyte/african_speech_dataset"
 hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
+moz_api_key: null        # set via: export MOZ_API_KEY=... (or set here)
 
 data_dir: "./processed_data"
 num_proc: 2
@@ -52,5 +53,23 @@ datasets:
     language: amh
     hf_path: KYAGABA/amharic-speech-dataset-110HRS-V21
     split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: kyagaba_combined_amharic_speech_dataset
+    enabled: true
+    source: hf
+    language: amh
+    hf_path: KYAGABA/combined_amharic_speech_dataset
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+
+  - name: common_voice_mozilla_24_amh
+    enabled: true
+    source: mozilla_cv
+    language: amh
+    moz_dataset_id: "cmj8u3ort000lnxxbp7q3icgp"
+    cv_folder: "am"
     audio_col: audio
     text_col: text

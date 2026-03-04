@@ -1,5 +1,5 @@
 # ── Core Data Collection ───────────────────────────────────────────────────────
-datasets>=2.18.0
+datasets<4.0
 huggingface-hub>=0.22.0
 
 # ── Data utilities ───────────────────────────────────────────────────────────
@@ -9,4 +9,5 @@ pyyaml>=6.0
 tqdm>=4.65.0
 tabulate>=0.9.0
 requests>=2.31.0
-soundfile>=0.12.0
+soundfile
+librosa

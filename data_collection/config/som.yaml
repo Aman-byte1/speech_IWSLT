@@ -1,5 +1,6 @@
 repo_id: "amanuelbyte/african_speech_dataset"
 hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
+moz_api_key: null        # set via: export MOZ_API_KEY=... (or set here)
 
 data_dir: "./processed_data"
 num_proc: 2
@@ -42,6 +43,33 @@ datasets:
     source: hf
     language: som
     hf_path: skydheere/soomali-asr-dataset
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+
+  - name: somali_tts_datasets
+    enabled: true
+    source: hf
+    language: som
+    hf_path: Somali-tts/somali-tts-datasets
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: shunyalabs_somali_speech_dataset
+    enabled: true
+    source: hf
+    language: som
+    hf_path: shunyalabs/somali-speech-dataset
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: transcript
+
+  - name: badrex_afri_voices_somali_speech
+    enabled: true
+    source: hf
+    language: som
+    hf_path: badrex/afri-voices-somali-speech
     split: "train"
     audio_col: audio
     text_col: transcription

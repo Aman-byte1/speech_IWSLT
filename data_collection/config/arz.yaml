@@ -18,49 +18,38 @@ text:
   lowercase: true
 
 datasets:
-  - name: sib_fleurs_swh
+  - name: ismaeeelxd_egyptian_arabic_lectures
     enabled: true
     source: hf
-    language: swh
-    hf_path: WueNLP/sib-fleurs
-    subset: swh_Latn
-    split: "train+validation"
+    language: arz
+    hf_path: ismaeeelxd/Egyptian-Arabic-Lectures
+    split: "train"
     audio_col: audio
     text_col: transcription
 
-  - name: common_voice_swh
+  - name: amine_khelif_arabic_multidialect
     enabled: true
     source: hf
-    language: swh
-    hf_path: mozilla-foundation/common_voice_17_0
-    subset: sw
-    split: "train+validation+test"
+    language: arz
+    hf_path: amine-khelif/arabic-multidialect
+    split: "train"
     audio_col: audio
     text_col: sentence
 
-  - name: swahili_parallel_michsethowusu
+  - name: mohamedgomaa30_egyptian_speech_clean_mgb3
     enabled: true
     source: hf
-    language: swh
-    hf_path: michsethowusu/swahili-words-speech-text-parallel
+    language: arz
+    hf_path: MohamedGomaa30/Egyptian-Speech-Clean-MGB3
     split: "train"
-    audio_col: audio
+    audio_col: separated_target_audio
     text_col: text
 
-  - name: swahili_speech_400hr_badrex
+  - name: mohamedgomaa30_egy_speech_deepclean_v0
     enabled: true
     source: hf
-    language: swh
-    hf_path: badrex/swahili-speech-400hr
-    split: "train+validation"
-    audio_col: audio
-    text_col: transcription
-
-  - name: common_voice_mozilla_24_swh
-    enabled: true
-    source: mozilla_cv
-    language: swh
-    moz_dataset_id: "cmj8u3puq00qhnxxbg26y0owu"
-    cv_folder: "sw"
+    language: arz
+    hf_path: MohamedGomaa30/Egy-Speech-DeepClean_v0
+    split: "train"
     audio_col: audio
     text_col: text

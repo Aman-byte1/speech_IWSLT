@@ -1,5 +1,6 @@
 repo_id: "amanuelbyte/african_speech_dataset"
 hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
+moz_api_key: null        # set via: export MOZ_API_KEY=... (or set here)
 
 data_dir: "./processed_data"
 num_proc: 2
@@ -46,11 +47,65 @@ datasets:
     audio_col: audio
     text_col: transcription
 
-  - name: wolof_tts_galsenai
+  - name: wolof_tts_anta_women
     enabled: true
     source: hf
     language: wol
-    hf_path: galsenai/wolof_tts
+    hf_path: galsenai/anta_women_tts
     split: "train"
     audio_col: audio
     text_col: text
+
+  - name: vonewman_wolof_audio_data
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: vonewman/wolof-audio-data
+    split: "train+test"
+    audio_col: audio
+    text_col: sentence
+
+  - name: indabax_asr_wolof
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: IndabaxSenegal/asr-wolof-dataset
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: vonewman_fleurs_wolof
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: vonewman/fleurs-wolof-dataset
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+
+  - name: ngia_asr_wolof_processed_with_ns
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: ngia/asr-wolof-dataset-processed-with-NS
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: moustapha91_wolof_tts
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: Moustapha91/wolof-tts-dataset
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+
+  - name: yigagilbert_alffa_wolof_19hr
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: yigagilbert/alffa-wolof-asr-dataset-19hr
+    split: "train"
+    audio_col: audio
+    text_col: transcription

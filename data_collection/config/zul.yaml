@@ -1,5 +1,6 @@
 repo_id: "amanuelbyte/african_speech_dataset"
 hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
+moz_api_key: null        # set via: export MOZ_API_KEY=... (or set here)
 
 data_dir: "./processed_data"
 num_proc: 2
@@ -47,3 +48,22 @@ datasets:
     split: "train"
     audio_col: audio
     text_col: transcription
+
+  - name: badrex_zulu_speech
+    enabled: true
+    source: hf
+    language: zul
+    hf_path: badrex/zulu-speech
+    subset: default
+    split: "dev"
+    audio_col: audio
+    text_col: transcript
+
+  - name: common_voice_mozilla_24_zul
+    enabled: true
+    source: mozilla_cv
+    language: zul
+    moz_dataset_id: "cmj8u3q3b00vxnxxbilr9nfyu"
+    cv_folder: "zu"
+    audio_col: audio
+    text_col: text
