@@ -1,7 +1,7 @@
 # One HF repo, separate config per language code:
 #   load_dataset(repo_id, "amh", split="train")
 
-repo_id: "amanuelbyte/african_speech_dataset"
+repo_id: "amanuelbyte/african_speech_dataset_new_uncleaned"
 hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
 
 data_dir: "./processed_data"

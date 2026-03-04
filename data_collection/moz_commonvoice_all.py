@@ -13,11 +13,11 @@ Mozilla Common Voice (DataCollective API) -> Hugging Face unified pipeline (NO Y
 Run:
   export MOZ_API_KEY="..."
   export HF_TOKEN="hf_..."
-  python moz_cv24_unified.py --repo_id amanuelbyte/african_speech_dataset
+  python moz_cv24_unified.py --repo_id amanuelbyte/african_speech_dataset_new_uncleaned
 
 Optional backup:
-  python moz_cv24_unified.py --repo_id amanuelbyte/african_speech_dataset \
-      --backup_repo_id amanuelbyte/african_speech_dataset_backup
+  python moz_cv24_unified.py --repo_id amanuelbyte/african_speech_dataset_new_uncleaned \
+      --backup_repo_id amanuelbyte/african_speech_dataset_new_uncleaned_backup
 """
 
 import argparse
@@ -308,7 +308,7 @@ def push_with_fallback(
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--repo_id", required=True, help="HF dataset repo (e.g. amanuelbyte/african_speech_dataset)")
+    ap.add_argument("--repo_id", required=True, help="HF dataset repo (e.g. amanuelbyte/african_speech_dataset_new_uncleaned)")
     ap.add_argument("--backup_repo_id", default=None, help="Optional backup HF repo if primary push fails")
     ap.add_argument("--work_dir", default="./moz_cv_work", help="Download/extract workspace")
     ap.add_argument("--out_dir", default="./processed_data_mozilla_cv24", help="Local processed datasets")
