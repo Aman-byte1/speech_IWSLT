@@ -1,0 +1,29 @@
+# 1. Set your token (safer than putting it in the YAML)
+export HF_TOKEN="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"
+
+# 2. Process everything
+python data.py --config config.yaml
+
+# 3. Machine died? Just re-run. It continues automatically.
+python data.py --config config.yaml
+
+# 4. Process one language at a time (saves memory)
+python data.py --config config.yaml --lang amh
+python data.py --config config.yaml --lang som
+
+# 5. All datasets processed? Merge and push only.
+python data.py --config config.yaml --merge-only
+
+# 6. Check progress
+python pipeline.py --config config.yaml --status
+
+# 7. Clean up local files after successful push
+python pipeline.py --config config.yaml --merge-only --cleanup
+
+
+pip install requests tqdm datasets pandas soundfile mutagen numpy huggingface_hub
+
+export MOZ_API_KEY="d63d7c9633801985b76b86e7817f10220612103c203b75d38013763d1189c61b"
+export HF_TOKEN="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"
+
+python moz_commonvoice_all.py --repo_id amanuelbyte/v1_african_speech_dataset

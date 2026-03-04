@@ -711,7 +711,7 @@ class DataPipeline:
                 logger.warning(f"  No valid datasets found for {lang}")
 
     def generate_report(self):
-        """Generate processing report."""
+        """Generate processing report with a formatted summary table."""
         logger.info("\n" + "=" * 60)
         logger.info("FINAL REPORT")
         logger.info("=" * 60)
@@ -733,20 +733,68 @@ class DataPipeline:
                 "Language": info.get('language', 'unknown'),
                 "Original": original,
                 "Final": final,
-                "Retained": f"{(final/original)*100:.1f}%" if original > 0 else "0%",
+                "Retained %": f"{(final/original)*100:.1f}%" if original > 0 else "N/A",
                 "Status": status
             })
 
         df = pd.DataFrame(data)
-        print("\n" + df.to_markdown(index=False))
 
-        # Save report
+        # Save full report CSV
         df.to_csv("processing_report.csv", index=False)
 
-        # Summary
-        print(f"\nTotal Original: {total_original}")
-        print(f"Total Final: {total_final}")
-        print(f"Overall Retention: {(total_final/total_original)*100:.1f}%" if total_original > 0 else "0%")
+        # ── Per-dataset table ────────────────────────────────────────────────
+        def _status_icon(s):
+            return {"completed": "✓", "failed": "✗", "skipped": "⊘", "processing": "⟳"}.get(s, "?")
+
+        df["Status"] = df["Status"].apply(lambda s: f"{_status_icon(s)}  {s}")
+
+        try:
+            from tabulate import tabulate
+
+            # Sort by language then dataset
+            df_sorted = df.sort_values(["Language", "Dataset"]).reset_index(drop=True)
+
+            rows = []
+            for lang, grp in df_sorted.groupby("Language", sort=False):
+                for _, row in grp.iterrows():
+                    rows.append([
+                        row["Dataset"], row["Language"],
+                        f"{row['Original']:,}", f"{row['Final']:,}",
+                        row["Retained %"], row["Status"]
+                    ])
+                # Language subtotal row
+                lang_orig = grp["Original"].sum()
+                lang_fin  = grp["Final"].sum()
+                pct = f"{(lang_fin/lang_orig)*100:.1f}%" if lang_orig > 0 else "N/A"
+                rows.append(["", f"── {lang.upper()} total ──",
+                             f"{lang_orig:,}", f"{lang_fin:,}", pct, ""])
+
+            # Grand total row
+            overall_pct = (
+                f"{(total_final/total_original)*100:.1f}%"
+                if total_original > 0 else "N/A"
+            )
+            rows.append(["", "══ GRAND TOTAL ══",
+                         f"{total_original:,}", f"{total_final:,}",
+                         overall_pct, ""])
+
+            headers = ["Dataset", "Language", "Original", "Final", "Retained %", "Status"]
+            print("\n")
+            print(tabulate(rows, headers=headers, tablefmt="rounded_outline",
+                          colalign=("left", "left", "right", "right", "right", "left")))
+
+        except ImportError:
+            # Fallback: plain markdown table
+            print("\n" + df.to_markdown(index=False))
+            print(f"\n{'─'*40}")
+            print(f"  Total Original : {total_original:,}")
+            print(f"  Total Final    : {total_final:,}")
+            overall_pct = (
+                f"{(total_final/total_original)*100:.1f}%"
+                if total_original > 0 else "N/A"
+            )
+            print(f"  Overall Retained: {overall_pct}")
+            print(f"{'─'*40}")
 
         # Save checkpoint state
         self.checkpoint.save()

@@ -1,0 +1,48 @@
+repo_id: "amanuelbyte/african_speech_dataset"
+hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
+
+data_dir: "./processed_data"
+num_proc: 2
+push_max_shard_size: "500MB"
+
+audio:
+  sampling_rate: 16000
+  min_duration: 0.5
+  max_duration: 30.0
+  filter_by_duration: true   # duration is computed from headers/bytes (no torchcodec)
+
+text:
+  min_chars: 2
+  max_chars: 500
+  lowercase: true
+
+datasets:
+  - name: sib_fleurs_hau
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: WueNLP/sib-fleurs
+    subset: hau_Latn
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+
+  - name: common_voice_hau
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: mozilla-foundation/common_voice_17_0
+    subset: ha
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: sentence
+
+  - name: nigerian_common_voice_hausa
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: benjaminogbonna/nigerian_common_voice_dataset
+    subset: hausa
+    split: "train"
+    audio_col: audio
+    text_col: sentence

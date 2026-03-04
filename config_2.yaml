@@ -1,0 +1,257 @@
+# One HF repo, separate config per language code:
+#   load_dataset(repo_id, "amh", split="train")
+
+repo_id: "amanuelbyte/african_speech_dataset"
+hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
+
+data_dir: "./processed_data"
+num_proc: 2
+push_max_shard_size: "500MB"
+
+audio:
+  sampling_rate: 16000
+  min_duration: 0.5
+  max_duration: 30.0
+  filter_by_duration: true   # duration is computed from headers/bytes (no torchcodec)
+
+text:
+  min_chars: 2
+  max_chars: 500
+  lowercase: true
+
+datasets:
+
+  # -------------------------
+  # SIB-FLEURS (Parquet-based) — recommended replacement for google/fleurs
+  # -------------------------
+  - name: sib_fleurs_amh
+    enabled: true
+    source: hf
+    language: amh
+    hf_path: WueNLP/sib-fleurs
+    subset: amh_Ethi
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+
+  - name: sib_fleurs_som
+    enabled: true
+    source: hf
+    language: som
+    hf_path: WueNLP/sib-fleurs
+    subset: som_Latn
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+
+  - name: sib_fleurs_hau
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: WueNLP/sib-fleurs
+    subset: hau_Latn
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+
+  - name: sib_fleurs_swh
+    enabled: true
+    source: hf
+    language: swh
+    hf_path: WueNLP/sib-fleurs
+    subset: swh_Latn
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+
+  - name: sib_fleurs_yor
+    enabled: true
+    source: hf
+    language: yor
+    hf_path: WueNLP/sib-fleurs
+    subset: yor_Latn
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+
+  - name: sib_fleurs_zul
+    enabled: true
+    source: hf
+    language: zul
+    hf_path: WueNLP/sib-fleurs
+    subset: zul_Latn
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+
+  - name: sib_fleurs_wol
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: WueNLP/sib-fleurs
+    subset: wol_Latn
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+
+
+  # -------------------------
+  # Common Voice (requires you to accept terms on HF + use HF_TOKEN)
+  # -------------------------
+  - name: common_voice_amh
+    enabled: true
+    source: hf
+    language: amh
+    hf_path: mozilla-foundation/common_voice_17_0
+    subset: am
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: sentence
+
+  - name: common_voice_som
+    enabled: true
+    source: hf
+    language: som
+    hf_path: mozilla-foundation/common_voice_17_0
+    subset: so
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: sentence
+
+  - name: common_voice_hau
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: mozilla-foundation/common_voice_17_0
+    subset: ha
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: sentence
+
+  - name: common_voice_swh
+    enabled: true
+    source: hf
+    language: swh
+    hf_path: mozilla-foundation/common_voice_17_0
+    subset: sw
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: sentence
+
+  - name: common_voice_yor
+    enabled: true
+    source: hf
+    language: yor
+    hf_path: mozilla-foundation/common_voice_17_0
+    subset: yo
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: sentence
+
+  - name: common_voice_zul
+    enabled: true
+    source: hf
+    language: zul
+    hf_path: mozilla-foundation/common_voice_17_0
+    subset: zu
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: sentence
+
+  - name: common_voice_wol
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: mozilla-foundation/common_voice_17_0
+    subset: wo
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: sentence
+
+
+  # -------------------------
+  # Extra community datasets (HF)
+  # -------------------------
+  - name: amharic_speech_badrex
+    enabled: true
+    source: hf
+    language: amh
+    hf_path: badrex/amharic-speech
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+
+  - name: amharic_110h_kyagaba
+    enabled: true
+    source: hf
+    language: amh
+    hf_path: KYAGABA/amharic-speech-dataset-110HRS-V21
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: somali_asr_skydheere
+    enabled: true
+    source: hf
+    language: som
+    hf_path: skydheere/soomali-asr-dataset
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+
+  - name: nigerian_common_voice_hausa
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: benjaminogbonna/nigerian_common_voice_dataset
+    subset: hausa
+    split: "train"
+    audio_col: audio
+    text_col: sentence
+
+  - name: swahili_parallel_michsethowusu
+    enabled: true
+    source: hf
+    language: swh
+    hf_path: michsethowusu/swahili-words-speech-text-parallel
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: yoruba_parallel_michsethowusu
+    enabled: true
+    source: hf
+    language: yor
+    hf_path: michsethowusu/yoruba-speech-text-parallel
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: alffa_wolof_isma
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: Isma/alffa_wolof
+    split: "train+dev"
+    audio_col: audio
+    text_col: transcription
+
+  - name: wolof_tts_galsenai
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: galsenai/wolof_tts
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  # GATED example (keep disabled unless you have access):
+  - name: za_african_next_voices_zul
+    enabled: false
+    source: hf
+    language: zul
+    hf_path: dsfsi-anv/za-african-next-voices
+    subset: zul
+    split: "train"
+    audio_col: audio
+    text_col: transcription

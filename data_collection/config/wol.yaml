@@ -1,0 +1,56 @@
+repo_id: "amanuelbyte/african_speech_dataset"
+hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
+
+data_dir: "./processed_data"
+num_proc: 2
+push_max_shard_size: "500MB"
+
+audio:
+  sampling_rate: 16000
+  min_duration: 0.5
+  max_duration: 30.0
+  filter_by_duration: true   # duration is computed from headers/bytes (no torchcodec)
+
+text:
+  min_chars: 2
+  max_chars: 500
+  lowercase: true
+
+datasets:
+  - name: sib_fleurs_wol
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: WueNLP/sib-fleurs
+    subset: wol_Latn
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+
+  - name: common_voice_wol
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: mozilla-foundation/common_voice_17_0
+    subset: wo
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: sentence
+
+  - name: alffa_wolof_isma
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: Isma/alffa_wolof
+    split: "train+dev"
+    audio_col: audio
+    text_col: transcription
+
+  - name: wolof_tts_galsenai
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: galsenai/wolof_tts
+    split: "train"
+    audio_col: audio
+    text_col: text

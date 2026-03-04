@@ -8,3 +8,4 @@ venv/
 processed_data/
 *.csv
 .DS_Store
+/data_collection/create_dummy_wav.py 
