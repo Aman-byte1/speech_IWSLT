@@ -28,6 +28,26 @@ datasets:
     audio_col: audio
     text_col: transcription
 
+  - name: zoelaenskii_zinny_swa_asr
+    enabled: true
+    source: hf
+    language: swh
+    hf_path: zoelaenskii/zinny
+    subset: swa_asr
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: transcription
+
+  - name: zoelaenskii_zinny_swa_tts
+    enabled: true
+    source: hf
+    language: swh
+    hf_path: zoelaenskii/zinny
+    subset: swa_tts
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: text
+
   - name: common_voice_swh
     enabled: false   # subset 'sw' not found in common_voice_17_0
     source: hf

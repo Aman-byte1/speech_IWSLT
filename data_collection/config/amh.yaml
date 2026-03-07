@@ -73,3 +73,61 @@ datasets:
     cv_folder: "am"
     audio_col: audio
     text_col: text
+
+  - name: afrivoice_ethiopia_amh
+    enabled: true
+    source: hf
+    language: amh
+    hf_path: DigitalUmuganda/Afrivoice_Ethiopia
+    subset: am
+    split: "train"
+    audio_col: wav
+    text_col: transcription
+
+  - name: leyu_amharic_gojjam_dialect
+    enabled: true
+    source: hf
+    language: amh
+    hf_path: leyu-amharic/leyu-amharic-gojjam-dialect
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: badrex_ethiopian_speech_amharic
+    enabled: true
+    source: hf
+    language: amh
+    hf_path: badrex/ethiopian-speech-flat
+    subset: amharic
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: transcription
+
+  - name: chappm_amharic_bdu_asr
+    enabled: true
+    source: hf
+    language: amh
+    hf_path: chappM/amharic-bdu-asr
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+
+  - name: zoelaenskii_zinny_amh_asr
+    enabled: true
+    source: hf
+    language: amh
+    hf_path: zoelaenskii/zinny
+    subset: amh_asr
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: transcription
+
+  - name: zoelaenskii_zinny_amh_tts
+    enabled: true
+    source: hf
+    language: amh
+    hf_path: zoelaenskii/zinny
+    subset: amh_tts
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: text

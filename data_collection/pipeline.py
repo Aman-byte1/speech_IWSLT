@@ -383,9 +383,19 @@ class Pipeline:
                     log.warning(f"  split '{s}' missing for {hf_path}/{subset}: {e}")
             if not parts:
                 raise RuntimeError(f"No splits loaded for {hf_path} subset={subset}")
-            return concatenate_datasets(parts)
+            ds = concatenate_datasets(parts)
+        else:
+            ds = load_dataset(hf_path, subset, split=split, token=self.hf_token)
 
-        return load_dataset(hf_path, subset, split=split, token=self.hf_token)
+        if "filter_col" in dsc and "filter_value" in dsc:
+            col = dsc["filter_col"]
+            val = dsc["filter_value"]
+            before = len(ds)
+            # Use a fast mapped filter or lambda
+            ds = ds.filter(lambda x: str(x.get(col, "")) == str(val), num_proc=self.num_proc, desc=f"Filter {col}=={val}")
+            log.info(f"  [Filter] {col} == '{val}' -> {len(ds)} / {before} rows")
+
+        return ds
 
     # ─────────────────── Mozilla Common Voice loader ───────────────────
 

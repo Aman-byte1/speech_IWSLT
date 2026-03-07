@@ -73,3 +73,12 @@ datasets:
     split: "train"
     audio_col: audio
     text_col: transcription
+
+  - name: skydheere_soomali_asr
+    enabled: true
+    source: hf
+    language: som
+    hf_path: skydheere/soomali-asr-dataset
+    split: "train"
+    audio_col: audio
+    text_col: transcription

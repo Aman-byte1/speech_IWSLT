@@ -47,6 +47,45 @@ datasets:
     audio_col: audio
     text_col: text
 
+  - name: idowuadams_yoruba_audio
+    enabled: true
+    source: hf
+    language: yor
+    hf_path: idowu-adams/Yoruba_Audio
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+
+  - name: benjaminogbonna_nigerian_cv_yoruba
+    enabled: true
+    source: hf
+    language: yor
+    hf_path: benjaminogbonna/nigerian_common_voice_dataset
+    subset: yoruba
+    split: "train"
+    audio_col: audio
+    text_col: sentence
+
+  - name: zoelaenskii_zinny_yor_asr
+    enabled: true
+    source: hf
+    language: yor
+    hf_path: zoelaenskii/zinny
+    subset: yor_asr
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: transcription
+
+  - name: zoelaenskii_zinny_yor_tts
+    enabled: true
+    source: hf
+    language: yor
+    hf_path: zoelaenskii/zinny
+    subset: yor_tts
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: text
+
   - name: common_voice_mozilla_24_yor
     enabled: true
     source: mozilla_cv

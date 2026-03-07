@@ -67,3 +67,50 @@ datasets:
     cv_folder: "zu"
     audio_col: audio
     text_col: text
+
+  - name: dsfsi_anv_multilingual_nchlt_zul
+    enabled: true
+    source: hf
+    language: zul
+    hf_path: dsfsi-anv/multilingual-nchlt-dataset
+    subset: zul
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: zionia_isizulu_asr_train
+    enabled: true
+    source: hf
+    language: zul
+    hf_path: zionia/isizulu-asr-train
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+
+  - name: zionia_isizulu_asr_1_1_speed
+    enabled: true
+    source: hf
+    language: zul
+    hf_path: zionia/isizulu-asr-1.1-speed
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+
+  - name: danielshaps_nchlt_speech_zul
+    enabled: true
+    source: hf
+    language: zul
+    hf_path: danielshaps/nchlt_speech_zul
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: dsfsi_anv_za_african_next_voices_zul
+    enabled: true
+    source: hf
+    language: zul
+    hf_path: dsfsi-anv/za-african-next-voices
+    subset: zul
+    split: "train"
+    audio_col: audio
+    text_col: transcript

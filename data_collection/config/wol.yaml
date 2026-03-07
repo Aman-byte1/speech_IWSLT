@@ -109,3 +109,21 @@ datasets:
     split: "train"
     audio_col: audio
     text_col: transcription
+
+  - name: galsenai_wolof_audio_data
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: galsenai/wolof-audio-data
+    split: "train"
+    audio_col: audio
+    text_col: sentence
+
+  - name: soynade_research_wolof_asr_data
+    enabled: true
+    source: hf
+    language: wol
+    hf_path: soynade-research/Wolof-ASR-Data
+    split: "train"
+    audio_col: audio
+    text_col: transcription

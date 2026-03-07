@@ -1,0 +1,59 @@
+repo_id: "amanuelbyte/african_speech_dataset_new_uncleaned"
+hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
+moz_api_key: null        # set via: export MOZ_API_KEY=... (or set here)
+
+data_dir: "./processed_data"
+num_proc: 2
+push_max_shard_size: "500MB"
+
+audio:
+  sampling_rate: 16000
+  min_duration: 0.5
+  max_duration: 30.0
+  filter_by_duration: true   # duration is computed from headers/bytes (no torchcodec)
+
+text:
+  min_chars: 2
+  max_chars: 500
+  lowercase: true
+
+datasets:
+  - name: deepdml_igbo_dict_16khz
+    enabled: true
+    source: hf
+    language: ibo
+    hf_path: deepdml/igbo-dict-16khz
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: benjaminogbonna_nigerian_cv_igbo
+    enabled: true
+    source: hf
+    language: ibo
+    hf_path: benjaminogbonna/nigerian_common_voice_dataset
+    subset: igbo
+    split: "train"
+    audio_col: audio
+    text_col: sentence
+
+  - name: zoelaenskii_zinny_ibo_asr
+    enabled: true
+    source: hf
+    language: ibo
+    hf_path: zoelaenskii/zinny
+    subset: ibo_asr
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: transcription
+
+  - name: zoelaenskii_zinny_ibo_tts
+    enabled: true
+    source: hf
+    language: ibo
+    hf_path: zoelaenskii/zinny
+    subset: ibo_tts
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: text
+

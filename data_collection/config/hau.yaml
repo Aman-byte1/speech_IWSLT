@@ -73,3 +73,42 @@ datasets:
     cv_folder: "ha"
     audio_col: audio
     text_col: text
+
+  - name: bible_tts_hausa
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: vpetukhov/bible_tts_hausa
+    split: "train+dev+test"
+    audio_col: audio
+    text_col: sentence
+
+  - name: aybee5_hausa_large_tts
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: Aybee5/Hausa-large-tts
+    split: "train"
+    audio_col: audio
+    text_col: text
+
+  - name: zoelaenskii_zinny_hau_asr
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: zoelaenskii/zinny
+    subset: hau_asr
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: transcription
+
+  - name: zoelaenskii_zinny_hau_tts
+    enabled: true
+    source: hf
+    language: hau
+    hf_path: zoelaenskii/zinny
+    subset: hau_tts
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: text
+
