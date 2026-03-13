@@ -22,6 +22,7 @@ import re
 import sys
 import tarfile
 import time
+import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -626,6 +627,32 @@ class Pipeline:
                     )
                     self.ckpt.set_lang_done(lc, len(merged))
                     log.info(f"  ✔ pushed {lc}")
+                    
+                    # Clear Arrow cache files
+                    merged.cleanup_cache_files()
+                    for p in parts:
+                        p.cleanup_cache_files()
+                    
+                    # Clear HuggingFace dataset download/processing cache
+                    from datasets import config
+                    if Path(config.HF_DATASETS_CACHE).exists():
+                        shutil.rmtree(config.HF_DATASETS_CACHE, ignore_errors=True)
+                        log.info("  ✔ cleared HF datasets cache")
+                        
+                    # Remove Mozilla Common Voice downloaded/extracted files for this language
+                    moz_tar = self.moz_work_dir / f"cv24_{lc}.tar.gz"
+                    moz_extract = self.moz_work_dir / f"cv24_{lc}_extracted"
+                    if moz_tar.exists():
+                        moz_tar.unlink()
+                    if moz_extract.exists():
+                        shutil.rmtree(moz_extract, ignore_errors=True)
+                        log.info("  ✔ cleared Mozilla downloaded files")
+                        
+                    # Remove local processed parts since they're successfully on HF
+                    if lang_dir.exists():
+                        shutil.rmtree(lang_dir, ignore_errors=True)
+                        log.info(f"  ✔ cleared local processed data for {lc}")
+                        
                     break
                 except Exception as e:
                     log.error(f"  push failed: {e}")

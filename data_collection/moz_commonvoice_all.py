@@ -403,6 +403,22 @@ def main():
         )
         if ok:
             ckpt.set_done("pushed", lc, {"repo": repo_used, "rows": len(ds), "ts": time.time()})
+            
+            # Clear arrow cache
+            ds.cleanup_cache_files()
+            
+            # Remove Mozilla Common Voice downloaded/extracted files for this language
+            import shutil
+            if tar_path.exists():
+                tar_path.unlink()
+            if extract_dir.exists():
+                shutil.rmtree(extract_dir, ignore_errors=True)
+                print("  [CLEANUP] cleared Mozilla downloaded files")
+                
+            # Remove local processed parts since they're successfully on HF
+            if save_dir.exists():
+                shutil.rmtree(save_dir, ignore_errors=True)
+                print(f"  [CLEANUP] cleared local processed data for {lc}")
         else:
             print(f"[FAIL] {lc}: push failed (kept local at {save_dir})")
 
