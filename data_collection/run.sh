@@ -35,8 +35,7 @@ source "$VENV_DIR/bin/activate"
 REQUIREMENTS="$SCRIPT_DIR/requirements.txt"
 if [ -f "$REQUIREMENTS" ]; then
     info "Installing dependencies ..."
-    pip install --quiet --upgrade pip
-    pip install --quiet -r "$REQUIREMENTS"
+    python3 -m pip install --quiet -r "$REQUIREMENTS"
 else
     warn "requirements.txt not found at $REQUIREMENTS — skipping install."
 fi
