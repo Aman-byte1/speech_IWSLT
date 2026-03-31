@@ -1,4 +1,4 @@
-repo_id: "amanuelbyte/african_speech_dataset_new_uncleaned"
+repo_id: "amanuelbyte/african_speech_dataset_ibo"
 hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
 moz_api_key: null        # set via: export MOZ_API_KEY=... (or set here)
 
