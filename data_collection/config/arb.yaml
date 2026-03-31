@@ -39,7 +39,7 @@ datasets:
     max_samples: 100000
 
   - name: tarteel_everyayah
-    enabled: true
+    enabled: false   # DISABLED: 132 shards = ~90GB download.
     source: hf
     language: arb_Arab
     hf_path: tarteel-ai/everyayah
