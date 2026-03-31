@@ -27,15 +27,4 @@ datasets:
     split: "train+validation+test"
     audio_col: audio
     text_col: sentence
-    max_samples: 150000
-
-  - name: fleurs_fra
-    enabled: true
-    source: hf
-    language: fra_Latn
-    hf_path: google/fleurs
-    subset: fr_fr
-    split: "train+validation+test"
-    audio_col: audio
-    text_col: transcription
-    max_samples: 50000
+    max_samples: 200000
