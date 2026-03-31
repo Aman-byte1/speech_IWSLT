@@ -18,13 +18,22 @@ text:
   lowercase: true
 
 datasets:
-  - name: common_voice_17_0_arb
+  - name: common_voice_18_arabic_rashad
     enabled: true
     source: hf
     language: arb_Arab
-    hf_path: mozilla-foundation/common_voice_17_0
-    subset: ar
-    split: "train+validation+test"
+    hf_path: MohamedRashad/common-voice-18-arabic
+    split: "train"
     audio_col: audio
     text_col: sentence
-    max_samples: 200000
+    max_samples: 100000
+
+  - name: masc_arabic
+    enabled: true
+    source: hf
+    language: arb_Arab
+    hf_path: MohamedRashad/MASC-Arabic
+    split: "train"
+    audio_col: audio
+    text_col: text
+    max_samples: 100000

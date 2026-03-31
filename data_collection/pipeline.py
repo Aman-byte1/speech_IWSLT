@@ -643,6 +643,8 @@ class Pipeline:
 
         log.info(f"\n{'='*72}\nMERGE & PUSH\n{'='*72}")
 
+        cfg_langs = {d.get("language") for d in self.cfg.get("datasets", []) if d.get("enabled", True)}
+
         for lang_dir in sorted(self.data_dir.iterdir()):
             if not lang_dir.is_dir():
                 continue
@@ -650,6 +652,8 @@ class Pipeline:
             if lc.startswith("."):
                 continue
             if lang and lc != lang:
+                continue
+            if lc not in cfg_langs:
                 continue
             if self.ckpt.lang_done(lc):
                 log.info(f"✔ SKIP push {lc} (already pushed)")

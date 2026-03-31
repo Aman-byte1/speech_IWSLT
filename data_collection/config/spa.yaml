@@ -18,13 +18,14 @@ text:
   lowercase: true
 
 datasets:
-  - name: common_voice_17_0_spa
+  - name: common_voice_mozilla_24_spa
     enabled: true
-    source: hf
+    source: mozilla_cv
     language: spa_Latn
-    hf_path: mozilla-foundation/common_voice_17_0
-    subset: es
+    moz_dataset_id: "REPLACE_WITH_MOZ_DATASET_ID_FOR_SPANISH"
+    cv_folder: "es"
     split: "train+validation+test"
     audio_col: audio
     text_col: sentence
+    max_samples: 200000
     max_samples: 200000

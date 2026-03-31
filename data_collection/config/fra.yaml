@@ -18,13 +18,14 @@ text:
   lowercase: true
 
 datasets:
-  - name: common_voice_17_0_fra
+  - name: common_voice_mozilla_24_fra
     enabled: true
-    source: hf
+    source: mozilla_cv
     language: fra_Latn
-    hf_path: mozilla-foundation/common_voice_17_0
-    subset: fr
+    moz_dataset_id: "REPLACE_WITH_MOZ_DATASET_ID_FOR_FRENCH"
+    cv_folder: "fr"
     split: "train+validation+test"
     audio_col: audio
     text_col: sentence
+    max_samples: 200000
     max_samples: 200000

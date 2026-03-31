@@ -18,13 +18,14 @@ text:
   lowercase: true
 
 datasets:
-  - name: common_voice_17_0_por
+  - name: common_voice_mozilla_24_por
     enabled: true
-    source: hf
+    source: mozilla_cv
     language: por_Latn
-    hf_path: mozilla-foundation/common_voice_17_0
-    subset: pt
+    moz_dataset_id: "REPLACE_WITH_MOZ_DATASET_ID_FOR_PORTUGUESE"
+    cv_folder: "pt"
     split: "train+validation+test"
     audio_col: audio
     text_col: sentence
+    max_samples: 200000
     max_samples: 200000
