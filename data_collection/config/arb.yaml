@@ -26,10 +26,10 @@ datasets:
     split: "train"
     audio_col: audio
     text_col: sentence
-    max_samples: 100000
+    max_samples: 200000
 
   - name: masc_arabic
-    enabled: true
+    enabled: false   # DISABLED: 400 shards x 440MB each = ~170GB download, way too slow
     source: hf
     language: arb_Arab
     hf_path: MohamedRashad/MASC-Arabic
@@ -37,3 +37,24 @@ datasets:
     audio_col: audio
     text_col: text
     max_samples: 100000
+
+  - name: tarteel_everyayah
+    enabled: true
+    source: hf
+    language: arb_Arab
+    hf_path: tarteel-ai/everyayah
+    split: "train"
+    audio_col: audio
+    text_col: text
+    max_samples: 100000
+
+  - name: speech_massive_arb
+    enabled: true
+    source: hf
+    language: arb_Arab
+    hf_path: FBK-MT/Speech-MASSIVE
+    subset: ar-SA
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: utt
+    max_samples: 50000
