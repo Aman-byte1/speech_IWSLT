@@ -18,14 +18,24 @@ text:
   lowercase: true
 
 datasets:
-  - name: common_voice_mozilla_24_fra
+  - name: common_voice_11_fra
     enabled: true
-    source: mozilla_cv
+    source: hf
     language: fra_Latn
-    moz_dataset_id: "REPLACE_WITH_MOZ_DATASET_ID_FOR_FRENCH"
-    cv_folder: "fr"
+    hf_path: mozilla-foundation/common_voice_11_0
+    subset: fr
     split: "train+validation+test"
     audio_col: audio
     text_col: sentence
-    max_samples: 200000
-    max_samples: 200000
+    max_samples: 150000
+
+  - name: fleurs_fra
+    enabled: true
+    source: hf
+    language: fra_Latn
+    hf_path: google/fleurs
+    subset: fr_fr
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: transcription
+    max_samples: 50000
