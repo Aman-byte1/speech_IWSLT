@@ -388,6 +388,13 @@ class Pipeline:
                 self.ckpt.set_ds_done(name, after, str(out_dir))
                 log.info(f"✔ DONE {name} → {out_dir}")
 
+                # Aggressive memory and disk cleanup per-dataset
+                ds.cleanup_cache_files()
+                from datasets import config
+                if Path(config.HF_DATASETS_CACHE).exists():
+                    shutil.rmtree(config.HF_DATASETS_CACHE, ignore_errors=True)
+                log.info("  ✔ aggressively cleared HF datasets cache")
+
             except Exception as e:
                 log.error(f"✘ FAIL {name} → {e}")
                 self.ckpt.set_ds_failed(name, str(e))

@@ -24,6 +24,15 @@ info()  { echo -e "${GREEN}[INFO]${NC}  $*"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
 
+# ── Cache Directories ────────────────────────────────────────
+export HF_HOME="$SCRIPT_DIR/hf_cache"
+export HF_DATASETS_CACHE="$SCRIPT_DIR/hf_cache/datasets"
+mkdir -p "$HF_HOME" "$HF_DATASETS_CACHE"
+
+info "Clearing leftover default HF datasets cache to reclaim disk space..."
+rm -rf "$HOME/.cache/huggingface/datasets" || true
+rm -rf "$HF_DATASETS_CACHE"/* || true
+
 # ── Virtual environment ───────────────────────────────────────
 if [ ! -d "$VENV_DIR" ]; then
     info "Creating virtual environment ..."
