@@ -373,6 +373,13 @@ class Pipeline:
                 ds = ds.map(self._clean_map, num_proc=self.num_proc, desc=f"Clean {name}")
                 after = len(ds)
                 log.info(f"  Filtered: {before} → {after}")
+                
+                max_samples = dsc.get("max_samples")
+                if max_samples and after > max_samples:
+                    log.info(f"  Limiting to max_samples: {max_samples}")
+                    ds = ds.select(range(max_samples))
+                    after = len(ds)
+
                 if after == 0:
                     raise RuntimeError("Empty after filtering")
 

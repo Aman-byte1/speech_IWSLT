@@ -1,0 +1,30 @@
+repo_id: "amanuelbyte/african_speech_dataset_new_uncleaned"
+hf_token: null           # set via: export HF_TOKEN=hf_xxx (recommended)
+moz_api_key: null        # set via: export MOZ_API_KEY=... (or set here)
+
+data_dir: "./processed_data"
+num_proc: 2
+push_max_shard_size: "500MB"
+
+audio:
+  sampling_rate: 16000
+  min_duration: 0.5
+  max_duration: 30.0
+  filter_by_duration: true   # duration is computed from headers/bytes (no torchcodec)
+
+text:
+  min_chars: 2
+  max_chars: 500
+  lowercase: true
+
+datasets:
+  - name: common_voice_17_0_arb
+    enabled: true
+    source: hf
+    language: arb_Arab
+    hf_path: mozilla-foundation/common_voice_17_0
+    subset: ar
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: sentence
+    max_samples: 200000
