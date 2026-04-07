@@ -17,7 +17,22 @@ text:
   max_chars: 500
   lowercase: true
 
+# Total target: ~70,000 samples across 7 sources (max 15k per dataset)
+#   common_voice_11        15,000
+#   multilingual_librispeech 15,000
+#   voxpopuli              10,000
+#   mtedx                  10,000
+#   cml_tts                10,000
+#   sib_fleurs              5,000
+#   mosel                   5,000
+#                        --------
+#                          70,000
+
 datasets:
+
+  # -----------------------------------------------
+  # Common Voice (Mozilla) — crowd-sourced
+  # -----------------------------------------------
   - name: common_voice_11_fra
     enabled: true
     source: hf
@@ -27,4 +42,100 @@ datasets:
     split: "train+validation+test"
     audio_col: audio
     text_col: sentence
-    max_samples: 200000
+    max_samples: 15000
+
+  # -----------------------------------------------
+  # Multilingual LibriSpeech (Facebook) — audiobook
+  # -----------------------------------------------
+  - name: multilingual_librispeech_fra
+    enabled: true
+    source: hf
+    language: fra_Latn
+    hf_path: facebook/multilingual_librispeech
+    subset: french
+    split: "train"
+    audio_col: audio
+    text_col: transcript
+    max_samples: 15000
+
+  # -----------------------------------------------
+  # VoxPopuli (Facebook) — EU Parliament speech
+  # -----------------------------------------------
+  - name: voxpopuli_fra
+    enabled: true
+    source: hf
+    language: fra_Latn
+    hf_path: facebook/voxpopuli
+    subset: fr
+    split: "train"
+    audio_col: audio
+    text_col: normalized_text
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # mTEDx — French TED talks
+  # -----------------------------------------------
+  - name: mtedx_fra
+    enabled: true
+    source: hf
+    language: fra_Latn
+    hf_path: deepdml/mtedx
+    subset: fr-fr
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # CML-TTS — clean studio TTS corpus
+  # -----------------------------------------------
+  - name: cml_tts_fra
+    enabled: true
+    source: hf
+    language: fra_Latn
+    hf_path: ylacombe/cml-tts
+    subset: french
+    split: "train"
+    audio_col: audio
+    text_col: sentence
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # SIB-FLEURS — diverse topics, Parquet-based
+  # -----------------------------------------------
+  - name: sib_fleurs_fra
+    enabled: true
+    source: hf
+    language: fra_Latn
+    hf_path: WueNLP/sib-fleurs
+    subset: fra_Latn
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+    max_samples: 5000
+
+  # -----------------------------------------------
+  # FBK-MT/mosel — speech translation data
+  # -----------------------------------------------
+  - name: mosel_fra
+    enabled: true
+    source: hf
+    language: fra_Latn
+    hf_path: FBK-MT/mosel
+    subset: fr
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+    max_samples: 5000
+
+  # -----------------------------------------------
+  # Mozilla CV 24 — disabled until MOZ_API_KEY set
+  # -----------------------------------------------
+  - name: common_voice_mozilla_24_fra
+    enabled: false
+    source: mozilla_cv
+    language: fra_Latn
+    moz_dataset_id: "cmj8u3puq00qhnxxbg26y0owu"
+    cv_folder: "fr"
+    audio_col: audio
+    text_col: text
