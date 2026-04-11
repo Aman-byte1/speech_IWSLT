@@ -17,7 +17,23 @@ text:
   max_chars: 500
   lowercase: true
 
+# Total target: ~70,000 samples across 7 sources
+#   common_voice_18_arabic    15,000
+#   speech_massive             10,000
+#   mediaspeech                10,000
+#   floras                     5,000
+#   belebele_fleurs            5,000
+#   sib_fleurs                 5,000
+#   google_svq                10,000
+#   linto_tunisian            10,000
+#                            --------
+#                              70,000
+
 datasets:
+
+  # -----------------------------------------------
+  # Common Voice 18 Arabic (MohamedRashad)
+  # -----------------------------------------------
   - name: common_voice_18_arabic_rashad
     enabled: true
     source: hf
@@ -26,28 +42,11 @@ datasets:
     split: "train"
     audio_col: audio
     text_col: sentence
-    max_samples: 200000
+    max_samples: 15000
 
-  - name: masc_arabic
-    enabled: false   # DISABLED: 400 shards x 440MB each = ~170GB download, way too slow
-    source: hf
-    language: arb_Arab
-    hf_path: MohamedRashad/MASC-Arabic
-    split: "train"
-    audio_col: audio
-    text_col: text
-    max_samples: 100000
-
-  - name: tarteel_everyayah
-    enabled: false   # DISABLED: 132 shards = ~90GB download.
-    source: hf
-    language: arb_Arab
-    hf_path: tarteel-ai/everyayah
-    split: "train"
-    audio_col: audio
-    text_col: text
-    max_samples: 100000
-
+  # -----------------------------------------------
+  # Speech-MASSIVE (FBK-MT) — NLU speech data
+  # -----------------------------------------------
   - name: speech_massive_arb
     enabled: true
     source: hf
@@ -57,4 +56,113 @@ datasets:
     split: "train+validation+test"
     audio_col: audio
     text_col: utt
-    max_samples: 50000
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # MediaSpeech — broadcast news Arabic
+  # -----------------------------------------------
+  - name: mediaspeech_arb
+    enabled: true
+    source: hf
+    language: arb_Arab
+    hf_path: ymoslem/MediaSpeech
+    subset: ar
+    split: "train"
+    audio_col: audio
+    text_col: sentence
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # FLORAS (espnet) — speech data
+  # -----------------------------------------------
+  - name: floras_arb
+    enabled: true
+    source: hf
+    language: arb_Arab
+    hf_path: espnet/floras
+    subset: ara
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+    max_samples: 5000
+
+  # -----------------------------------------------
+  # Belebele-FLEURS — diverse topics
+  # -----------------------------------------------
+  - name: belebele_fleurs_arb
+    enabled: true
+    source: hf
+    language: arb_Arab
+    hf_path: WueNLP/belebele-fleurs
+    subset: arb_Arab
+    split: "train+test"
+    audio_col: audio
+    text_col: transcription
+    max_samples: 5000
+
+  # -----------------------------------------------
+  # SIB-FLEURS — diverse topics
+  # -----------------------------------------------
+  - name: sib_fleurs_arb
+    enabled: true
+    source: hf
+    language: arb_Arab
+    hf_path: WueNLP/sib-fleurs
+    subset: arb_Arab
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+    max_samples: 5000
+
+  # -----------------------------------------------
+  # Google SVQ — speech data
+  # -----------------------------------------------
+  - name: google_svq_arb
+    enabled: true
+    source: hf
+    language: arb_Arab
+    hf_path: google/svq
+    subset: ar
+    split: "train"
+    audio_col: audio
+    text_col: text
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # LinTO Tunisian Arabic — conversational
+  # -----------------------------------------------
+  - name: linto_tunisian_arb
+    enabled: true
+    source: hf
+    language: arb_Arab
+    hf_path: linagora/linto-dataset-audio-ar-tn
+    split: "train"
+    audio_col: audio
+    text_col: text
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # MASC Arabic — DISABLED (too large, ~170GB)
+  # -----------------------------------------------
+  - name: masc_arabic
+    enabled: false   # DISABLED: 400 shards x 440MB each = ~170GB download
+    source: hf
+    language: arb_Arab
+    hf_path: MohamedRashad/MASC-Arabic
+    split: "train"
+    audio_col: audio
+    text_col: text
+    max_samples: 100000
+
+  # -----------------------------------------------
+  # Tarteel EveryAyah — DISABLED (too large, ~90GB)
+  # -----------------------------------------------
+  - name: tarteel_everyayah
+    enabled: false   # DISABLED: 132 shards = ~90GB download
+    source: hf
+    language: arb_Arab
+    hf_path: tarteel-ai/everyayah
+    split: "train"
+    audio_col: audio
+    text_col: text
+    max_samples: 100000

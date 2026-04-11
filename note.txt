@@ -27,3 +27,25 @@ export MOZ_API_KEY="d63d7c9633801985b76b86e7817f10220612103c203b75d38013763d1189
 export HF_TOKEN="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"
 
 python moz_commonvoice_all.py --repo_id amanuelbyte/v1_african_speech_dataset
+
+
+
+
+
+# ── 1. Clone the repo ─────────────────────────────────────────
+git clone https://github.com/Aman-byte1/speech_IWSLT.git
+cd speech_IWSLT/data_collection
+
+# ── 2. Create & activate a virtual environment ────────────────
+python3 -m venv .venv && source .venv/bin/activate
+
+# ── 3. Install dependencies ───────────────────────────────────
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# ── 4. Set tokens ─────────────────────────────────────────────
+export HF_TOKEN="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"
+export MOZ_API_KEY="d63d7c9633801985b76b86e7817f10220612103c203b75d38013763d1189c61b"
+
+# ── 5. Run French pipeline ────────────────────────────────────
+bash run.sh fra

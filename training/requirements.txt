@@ -5,6 +5,7 @@ transformers>=4.40.0
 datasets>=2.18.0
 accelerate>=0.27.0
 evaluate>=0.4.0
+jiwer>=3.0.0
 
 # ── Audio processing ─────────────────────────────────────────────────────────
 librosa>=0.10.0

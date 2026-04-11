@@ -17,15 +17,125 @@ text:
   max_chars: 500
   lowercase: true
 
+# Total target: ~70,000 samples across 7 sources
+#   multilingual_librispeech  15,000
+#   voxpopuli                 10,000
+#   speech_massive            10,000
+#   mosel                     10,000
+#   sib_fleurs                 5,000
+#   minds14                   10,000
+#   mediaspeech               10,000
+#                           --------
+#                             70,000
+
 datasets:
-  - name: common_voice_mozilla_24_spa
+
+  # -----------------------------------------------
+  # Multilingual LibriSpeech (Facebook) — audiobook
+  # -----------------------------------------------
+  - name: multilingual_librispeech_spa
     enabled: true
+    source: hf
+    language: spa_Latn
+    hf_path: facebook/multilingual_librispeech
+    subset: spanish
+    split: "train"
+    audio_col: audio
+    text_col: transcript
+    max_samples: 15000
+
+  # -----------------------------------------------
+  # VoxPopuli (Facebook) — EU Parliament speech
+  # -----------------------------------------------
+  - name: voxpopuli_spa
+    enabled: true
+    source: hf
+    language: spa_Latn
+    hf_path: facebook/voxpopuli
+    subset: es
+    split: "train"
+    audio_col: audio
+    text_col: normalized_text
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # Speech-MASSIVE (FBK-MT) — NLU speech data
+  # -----------------------------------------------
+  - name: speech_massive_spa
+    enabled: true
+    source: hf
+    language: spa_Latn
+    hf_path: FBK-MT/Speech-MASSIVE
+    subset: es-ES
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: utt
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # MOSEL (FBK-MT) — speech translation data
+  # -----------------------------------------------
+  - name: mosel_spa
+    enabled: true
+    source: hf
+    language: spa_Latn
+    hf_path: FBK-MT/mosel
+    subset: es
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # SIB-FLEURS — diverse topics
+  # -----------------------------------------------
+  - name: sib_fleurs_spa
+    enabled: true
+    source: hf
+    language: spa_Latn
+    hf_path: WueNLP/sib-fleurs
+    subset: spa_Latn
+    split: "train+validation"
+    audio_col: audio
+    text_col: transcription
+    max_samples: 5000
+
+  # -----------------------------------------------
+  # MINDS-14 (PolyAI) — intent classification speech
+  # -----------------------------------------------
+  - name: minds14_spa
+    enabled: true
+    source: hf
+    language: spa_Latn
+    hf_path: PolyAI/minds14
+    subset: es-ES
+    split: "train"
+    audio_col: audio
+    text_col: transcription
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # MediaSpeech — broadcast news
+  # -----------------------------------------------
+  - name: mediaspeech_spa
+    enabled: true
+    source: hf
+    language: spa_Latn
+    hf_path: ymoslem/MediaSpeech
+    subset: es
+    split: "train"
+    audio_col: audio
+    text_col: sentence
+    max_samples: 10000
+
+  # -----------------------------------------------
+  # Mozilla CV 24 — disabled until MOZ_API_KEY set
+  # -----------------------------------------------
+  - name: common_voice_mozilla_24_spa
+    enabled: false
     source: mozilla_cv
     language: spa_Latn
     moz_dataset_id: "REPLACE_WITH_MOZ_DATASET_ID_FOR_SPANISH"
     cv_folder: "es"
-    split: "train+validation+test"
     audio_col: audio
-    text_col: sentence
-    max_samples: 200000
-    max_samples: 200000
+    text_col: text
