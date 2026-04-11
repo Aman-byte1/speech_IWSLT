@@ -30,18 +30,56 @@ text:
 datasets:
 
   # -----------------------------------------------
-  # Common Voice 11 (Mozilla Foundation) — crowd-sourced, RELIABLE
+  # VoxForge Spanish (ciempiess)
   # -----------------------------------------------
-  - name: common_voice_11_spa
+  - name: ciempiess_voxforge
     enabled: true
     source: hf
     language: spa_Latn
-    hf_path: mozilla-foundation/common_voice_11_0
-    subset: es
-    split: "train+validation+test"
+    hf_path: ciempiess/voxforge_spanish
+    split: "train"
     audio_col: audio
-    text_col: sentence
-    max_samples: 30000
+    text_col: text
+    max_samples: 21000
+
+  # -----------------------------------------------
+  # TEDx Spanish (ciempiess)
+  # -----------------------------------------------
+  - name: ciempiess_tedx
+    enabled: true
+    source: hf
+    language: spa_Latn
+    hf_path: ciempiess/tedx_spanish
+    split: "train"
+    audio_col: audio
+    text_col: text
+    max_samples: 11000
+
+  # -----------------------------------------------
+  # Wikipedia Spanish (ciempiess)
+  # -----------------------------------------------
+  - name: ciempiess_wikipedia
+    enabled: true
+    source: hf
+    language: spa_Latn
+    hf_path: ciempiess/wikipedia_spanish
+    split: "train"
+    audio_col: audio
+    text_col: text
+    max_samples: 11000
+
+  # -----------------------------------------------
+  # Tele con Ciencia (ciempiess)
+  # -----------------------------------------------
+  - name: ciempiess_teleconciencia
+    enabled: true
+    source: hf
+    language: spa_Latn
+    hf_path: ciempiess/tele_con_ciencia
+    split: "train"
+    audio_col: audio
+    text_col: text
+    max_samples: 12000
 
   # -----------------------------------------------
   # Multilingual LibriSpeech (Facebook) — audiobook
