@@ -17,18 +17,31 @@ text:
   max_chars: 500
   lowercase: true
 
-# Total target: ~70,000 samples across 7 sources
-#   multilingual_librispeech  15,000
-#   voxpopuli                 10,000
-#   speech_massive            10,000
-#   mosel                     10,000
-#   sib_fleurs                 5,000
-#   minds14                   10,000
-#   mediaspeech               10,000
+# Total target: ~70,000+ samples
+#   common_voice_11           30,000   (crowd-sourced, reliable)
+#   multilingual_librispeech  15,000   (audiobook)
+#   speech_massive            10,000   (NLU speech)
+#   mediaspeech               10,000   (broadcast news)
+#   sib_fleurs                 5,000   (diverse topics)
+#   minds14                   10,000   (intent classification)
 #                           --------
-#                             70,000
+#                             80,000
 
 datasets:
+
+  # -----------------------------------------------
+  # Common Voice 11 (Mozilla Foundation) — crowd-sourced, RELIABLE
+  # -----------------------------------------------
+  - name: common_voice_11_spa
+    enabled: true
+    source: hf
+    language: spa_Latn
+    hf_path: mozilla-foundation/common_voice_11_0
+    subset: es
+    split: "train+validation+test"
+    audio_col: audio
+    text_col: sentence
+    max_samples: 30000
 
   # -----------------------------------------------
   # Multilingual LibriSpeech (Facebook) — audiobook
@@ -48,7 +61,7 @@ datasets:
   # VoxPopuli (Facebook) — EU Parliament speech
   # -----------------------------------------------
   - name: voxpopuli_spa
-    enabled: true
+    enabled: false   # DISABLED: incredibly slow to stream/download 10 large parquet shards
     source: hf
     language: spa_Latn
     hf_path: facebook/voxpopuli
@@ -73,17 +86,17 @@ datasets:
     max_samples: 10000
 
   # -----------------------------------------------
-  # MOSEL (FBK-MT) — speech translation data
+  # MediaSpeech — broadcast news
   # -----------------------------------------------
-  - name: mosel_spa
+  - name: mediaspeech_spa
     enabled: true
     source: hf
     language: spa_Latn
-    hf_path: FBK-MT/mosel
+    hf_path: ymoslem/MediaSpeech
     subset: es
     split: "train"
     audio_col: audio
-    text_col: transcription
+    text_col: sentence
     max_samples: 10000
 
   # -----------------------------------------------
@@ -113,29 +126,3 @@ datasets:
     audio_col: audio
     text_col: transcription
     max_samples: 10000
-
-  # -----------------------------------------------
-  # MediaSpeech — broadcast news
-  # -----------------------------------------------
-  - name: mediaspeech_spa
-    enabled: true
-    source: hf
-    language: spa_Latn
-    hf_path: ymoslem/MediaSpeech
-    subset: es
-    split: "train"
-    audio_col: audio
-    text_col: sentence
-    max_samples: 10000
-
-  # -----------------------------------------------
-  # Mozilla CV 24 — disabled until MOZ_API_KEY set
-  # -----------------------------------------------
-  - name: common_voice_mozilla_24_spa
-    enabled: false
-    source: mozilla_cv
-    language: spa_Latn
-    moz_dataset_id: "REPLACE_WITH_MOZ_DATASET_ID_FOR_SPANISH"
-    cv_folder: "es"
-    audio_col: audio
-    text_col: text
