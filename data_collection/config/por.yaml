@@ -17,13 +17,12 @@ text:
   max_chars: 500
   lowercase: true
 
-# Total target: ~70,000 samples across 7 sources
-#   multilingual_librispeech  15,000
+# Total target: ~60,000 samples across 6 sources
+#   multilingual_librispeech  20,000
 #   speech_massive            10,000
-#   mosel                     10,000
+#   mosel                     15,000
 #   sib_fleurs                 5,000
 #   belebele_fleurs            5,000
-#   mtedx_ptbr                10,000
 #   minds14                   15,000
 #                           --------
 #                             70,000
@@ -42,7 +41,7 @@ datasets:
     split: "train"
     audio_col: audio
     text_col: transcript
-    max_samples: 15000
+    max_samples: 20000
 
   # -----------------------------------------------
   # Speech-MASSIVE (FBK-MT) — NLU speech data
@@ -70,7 +69,7 @@ datasets:
     split: "train"
     audio_col: audio
     text_col: transcription
-    max_samples: 10000
+    max_samples: 15000
 
   # -----------------------------------------------
   # SIB-FLEURS — diverse topics
@@ -101,10 +100,10 @@ datasets:
     max_samples: 5000
 
   # -----------------------------------------------
-  # mTEDx Portuguese-BR — TED talks
+  # mTEDx Portuguese-BR — DISABLED: 219 shards ~80GB download for 10k samples
   # -----------------------------------------------
   - name: mtedx_ptbr
-    enabled: true
+    enabled: false   # DISABLED: 219 parquet shards = ~80GB download, not worth it
     source: hf
     language: por_Latn
     hf_path: dominguesm/mTEDx-ptbr
