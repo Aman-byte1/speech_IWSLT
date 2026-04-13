@@ -216,23 +216,29 @@ def load_and_prepare_dataset(
     log.info(f"  Loading dataset: {hf_repo}{subset_str}")
     
     try:
-        ds = load_dataset(hf_repo, subset, split="train", trust_remote_code=True)
+        ds_iterable = load_dataset(hf_repo, subset, split="train", streaming=True, trust_remote_code=True)
     except Exception as e:
         log.warning(f"  Failed to load 'train' split, trying without split: {e}")
-        ds = load_dataset(hf_repo, subset, trust_remote_code=True)
-        if isinstance(ds, DatasetDict):
-            # Concatenate all available splits
-            all_splits = []
-            for split_name in ds:
-                all_splits.append(ds[split_name])
-            ds = concatenate_datasets(all_splits)
+        ds_iterable_dict = load_dataset(hf_repo, subset, streaming=True, trust_remote_code=True)
+        # Just grab the first available split (usually 'train')
+        first_split = list(ds_iterable_dict.keys())[0]
+        ds_iterable = ds_iterable_dict[first_split]
     
-    log.info(f"  Loaded {len(ds)} samples. Columns: {ds.column_names}")
+    if max_samples:
+        log.info(f"  Streaming and taking first {max_samples} samples...")
+        ds_iterable = ds_iterable.take(max_samples)
+    else:
+        log.info("  Streaming entire dataset (no max_samples provided)...")
+
+    log.info("  Downloading/caching streamed samples to local disk...")
+    from datasets import Dataset
+    def gen():
+        for ex in ds_iterable:
+            yield ex
     
-    # Subsample if requested (useful for quick experiments)
-    if max_samples and len(ds) > max_samples:
-        ds = ds.shuffle(seed=42).select(range(max_samples))
-        log.info(f"  Subsampled to {max_samples} samples")
+    ds = Dataset.from_generator(gen)
+    
+    log.info(f"  Loaded {len(ds)} samples into memory. Columns: {ds.column_names}")
     
     # Ensure we have the expected columns
     if "audio" not in ds.column_names:
