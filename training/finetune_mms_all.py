@@ -68,7 +68,7 @@ LANGUAGES = {
     "arz": {
         "mms_code": "ara",
         "hf_repo": "amanuelbyte/african_speech_dataset_new_uncleaned",
-        "subset": "arz",
+        "subset": "arz_clean",
         "text_col": "text",
         "name": "Egyptian Arabic",
     },
@@ -90,14 +90,14 @@ LANGUAGES = {
     "swh": {
         "mms_code": "swh",
         "hf_repo": "amanuelbyte/african_speech_clean",
-        "subset": "swahili",
+        "subset": "swahili_clean",
         "text_col": "text",
         "name": "Swahili",
     },
     "yor": {
         "mms_code": "yor",
         "hf_repo": "amanuelbyte/african_speech_clean",
-        "subset": "yoruba",
+        "subset": "yoruba_clean",
         "text_col": "text",
         "name": "Yoruba",
     },
@@ -120,14 +120,14 @@ LANGUAGES = {
     "fra": {
         "mms_code": "fra",
         "hf_repo": "amanuelbyte/african_speech_dataset_fra",
-        "subset": "fra_Latn",
+        "subset": "fra_Latn_clean",
         "text_col": "text",
         "name": "French",
     },
     "spa": {
         "mms_code": "spa",
         "hf_repo": "amanuelbyte/african_speech_dataset_spa",
-        "subset": "spa_Latn",
+        "subset": "spa_Latn_clean",
         "text_col": "text",
         "name": "Spanish",
     },
@@ -338,8 +338,10 @@ def preprocess_for_ctc(
             remove_columns=dataset[split].column_names,
             num_proc=num_proc,
         )
-        # Filter out audio longer than max
-        ds = ds.filter(lambda x: x["input_length"] < max_input_len)
+        # Filter out audio longer than max, AND audio that's too short for the target text length
+        # Wav2Vec2 downsamples by ~320x. So the output acoustic length is approx input_length // 320
+        # If the acoustic length is shorter than the number of text characters, CTC loss crashes in C++
+        ds = ds.filter(lambda x: x["input_length"] < max_input_len and (x["input_length"] // 320) > len(x["labels"]))
         processed[split] = ds
         log.info(f"  {split}: {len(ds)} samples (after length filter)")
     
