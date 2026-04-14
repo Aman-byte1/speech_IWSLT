@@ -147,7 +147,7 @@ MODEL_NAME = "facebook/mms-1b-all"
 SAMPLING_RATE = 16000
 MAX_AUDIO_SECONDS = 30
 OUTPUT_ROOT = "./mms-finetuned"
-DEFAULT_MAX_SAMPLES = 23600  # balance all langs to smallest full dataset (Somali)
+DEFAULT_MAX_SAMPLES = 10000  # lowered to meet April 15 deadline
 
 # =====================================================================
 # Logging
@@ -657,8 +657,7 @@ def parse_args():
         help="Languages to exclude from training",
     )
     
-    # Training hyperparameters
-    p.add_argument("--epochs", type=int, default=3, help="Training epochs per language")
+    p.add_argument("--epochs", type=int, default=1, help="Training epochs per language")
     p.add_argument("--batch_size", type=int, default=16, help="Per-device train batch size")
     p.add_argument("--eval_batch_size", type=int, default=8, help="Per-device eval batch size")
     p.add_argument("--grad_accum", type=int, default=4, help="Gradient accumulation steps")
