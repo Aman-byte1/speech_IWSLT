@@ -66,7 +66,7 @@ LANGUAGES = {
         "name": "Amharic",
     },
     "arz": {
-        "mms_code": "arz",
+        "mms_code": "ara",
         "hf_repo": "amanuelbyte/african_speech_dataset_new_uncleaned",
         "subset": "arz",
         "text_col": "text",
