@@ -274,8 +274,8 @@ def load_and_prepare_dataset(
     )
     log.info(f"  After text filter: {len(ds)} samples")
     
-    # Cast audio to target sampling rate
-    ds = ds.cast_column("audio", Audio(sampling_rate=sampling_rate))
+    # Do NOT auto-decode audio, as HF's auto-decoder forces torchcodec which crashes
+    ds = ds.cast_column("audio", Audio(decode=False))
     
     # Train/eval split
     split_ds = ds.train_test_split(test_size=test_size, seed=42)
@@ -293,11 +293,34 @@ def preprocess_for_ctc(
 ):
     """Tokenize text and extract audio features for CTC training."""
     
+    import soundfile as sf
+    import librosa
+    import io
+
     def prepare_batch(batch):
         audio = batch["audio"]
+        
+        # Extract raw audio bytes
+        audio_bytes = audio.get("bytes")
+        if not audio_bytes:
+            with open(audio["path"], "rb") as f:
+                audio_bytes = f.read()
+                
+        # Manually decode to bypass Hugging Face's audio decoder restrictions
+        try:
+            with io.BytesIO(audio_bytes) as f:
+                array, sr = sf.read(f, dtype="float32")
+        except Exception:
+            with io.BytesIO(audio_bytes) as f:
+                array, sr = librosa.load(f, sr=None, dtype="float32")
+                
+        # Resample to the target sampling rate if needed
+        if sr != sampling_rate:
+            array = librosa.resample(y=array, orig_sr=sr, target_sr=sampling_rate)
+
         inputs = processor(
-            audio["array"],
-            sampling_rate=audio["sampling_rate"],
+            array,
+            sampling_rate=sampling_rate,
             return_tensors="np",
         )
         batch["input_values"] = inputs.input_values[0]
