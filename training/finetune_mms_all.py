@@ -14,11 +14,7 @@
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-# Block torchcodec from being imported even if partially installed
 import sys
-sys.modules["torchcodec"] = None
-sys.modules["torchcodec.decoders"] = None
-sys.modules["datasets.features._torchcodec"] = None
 
 import json
 import time
@@ -216,10 +212,10 @@ def load_and_prepare_dataset(
     log.info(f"  Loading dataset: {hf_repo}{subset_str}")
     
     try:
-        ds_iterable = load_dataset(hf_repo, subset, split="train", streaming=True, trust_remote_code=True)
+        ds_iterable = load_dataset(hf_repo, subset, split="train", streaming=True)
     except Exception as e:
         log.warning(f"  Failed to load 'train' split, trying without split: {e}")
-        ds_iterable_dict = load_dataset(hf_repo, subset, streaming=True, trust_remote_code=True)
+        ds_iterable_dict = load_dataset(hf_repo, subset, streaming=True)
         # Just grab the first available split (usually 'train')
         first_split = list(ds_iterable_dict.keys())[0]
         ds_iterable = ds_iterable_dict[first_split]
