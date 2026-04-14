@@ -188,8 +188,8 @@ def load_and_prepare_dataset(
                 ds = ds.rename_column(col, "text")
                 break
 
-    ds = ds.filter(lambda x: x["text"] is not None and len(str(x["text"]).strip()) > 1)
     ds = ds.cast_column("audio", Audio(decode=False))
+    ds = ds.filter(lambda x: x["text"] is not None and len(str(x["text"]).strip()) > 1)
     
     return ds.train_test_split(test_size=test_size, seed=42)
 
