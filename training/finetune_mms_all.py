@@ -120,25 +120,25 @@ LANGUAGES = {
         "text_col": "text",
         "name": "Zulu",
     },
-    # ── Pending data collection (repos may not exist yet) ───────────
+    # ── Pending data collection / New Repos ───────────
     "fra": {
         "mms_code": "fra",
         "hf_repo": "amanuelbyte/african_speech_dataset_fra",
-        "subset": None,
+        "subset": "fra_Latn",
         "text_col": "text",
         "name": "French",
     },
     "spa": {
         "mms_code": "spa",
         "hf_repo": "amanuelbyte/african_speech_dataset_spa",
-        "subset": None,
+        "subset": "spa_Latn",
         "text_col": "text",
         "name": "Spanish",
     },
     "por": {
         "mms_code": "por",
         "hf_repo": "amanuelbyte/african_speech_dataset_por",
-        "subset": None,
+        "subset": "por_Latn",
         "text_col": "text",
         "name": "Portuguese",
     },
