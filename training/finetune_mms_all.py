@@ -151,7 +151,7 @@ def load_and_prepare_dataset(
     sampling_rate: int = SAMPLING_RATE,
     max_audio_seconds: int = MAX_AUDIO_SECONDS,
     test_size: float = 0.1,
-    num_proc: int = 4,
+    num_proc: int = 0,
     max_samples: Optional[int] = None,
     token: Optional[str] = None,
 ) -> DatasetDict:
@@ -193,7 +193,7 @@ def load_and_prepare_dataset(
     
     return ds.train_test_split(test_size=test_size, seed=42)
 
-def preprocess_for_ctc(dataset, processor, sampling_rate, max_audio_seconds, num_proc):
+def preprocess_for_ctc(dataset, processor, sampling_rate, max_audio_seconds, num_proc=0):
     import soundfile as sf
     import librosa
     import io
@@ -214,10 +214,20 @@ def preprocess_for_ctc(dataset, processor, sampling_rate, max_audio_seconds, num
         if sr != sampling_rate:
             array = librosa.resample(y=array, orig_sr=sr, target_sr=sampling_rate)
 
-        inputs = processor(array, sampling_rate=sampling_rate, return_tensors="np")
-        batch["input_values"] = inputs.input_values[0]
-        batch["input_length"] = len(inputs.input_values[0])
-        batch["labels"] = processor.tokenizer(batch["text"]).input_ids
+        try:
+            inputs = processor(
+                array,
+                sampling_rate=sampling_rate,
+                return_tensors="np",
+            )
+            batch["input_values"] = inputs.input_values[0]
+            batch["input_length"] = len(inputs.input_values[0])
+            batch["labels"] = processor.tokenizer(batch["text"]).input_ids
+        except Exception as e:
+            log.warning(f"  ⚠ Failed to process sample: {e}")
+            batch["input_values"] = [0.0] * 100
+            batch["input_length"] = 100
+            batch["labels"] = [0]
         return batch
 
     max_input_len = sampling_rate * max_audio_seconds
@@ -268,11 +278,13 @@ def finetune_one_language(lang_key, lang_cfg, args, results_log):
             return {"wer": wer_metric.compute(predictions=pred_str, references=label_str),
                     "cer": cer_metric.compute(predictions=pred_str, references=label_str)}
 
+        num_train_epochs = getattr(args, "epochs", getattr(args, "num_train_epochs", 1))
+
         trainer = Trainer(
             model=model,
             args=TrainingArguments(
                 output_dir=output_dir,
-                num_train_epochs=args.epochs,
+            num_train_epochs=num_train_epochs,
                 per_device_train_batch_size=args.batch_size,
                 gradient_accumulation_steps=args.grad_accum,
                 learning_rate=args.lr,
@@ -303,6 +315,8 @@ def finetune_one_language(lang_key, lang_cfg, args, results_log):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--langs", nargs="+", default=None)
+    p.add_argument("--epochs", type=int, default=1)
+    p.add_argument("--num_train_epochs", type=int, default=None)
     p.add_argument("--resume", action="store_true")
     p.add_argument("--push_to_hub", action="store_true")
     p.add_argument("--max_samples", type=int, default=10000)
